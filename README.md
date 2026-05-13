@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/banner.png" alt="Cherify Banner" width="100%">
+</p>
+
 # 🎵 Cherify Music Platform
 
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployment-black?style=for-the-badge&logo=vercel)](https://cherify-eta.vercel.app)
