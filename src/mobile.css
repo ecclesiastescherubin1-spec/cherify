@@ -1,0 +1,110 @@
+/* Unified "Masterpiece" Mobile Design */
+
+@media (max-width: 768px) {
+  /* 1. UNIFIED GLASS HEADER */
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 110px; /* Combined height */
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(25px);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px 0 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Header Top Row (Arrows + Profile) */
+  .topbar > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .search-bar {
+    display: none !important;
+  }
+
+  /* 2. INTEGRATED TABS (Inside Header) */
+  .mobile-nav {
+    position: relative !important; /* Now part of the flow */
+    top: 0 !important;
+    height: 44px !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+  .mobile-nav-item {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  .mobile-nav-item.active {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-bright-accent) !important;
+  }
+  .mobile-nav-item span {
+    font-size: 12px !important;
+    letter-spacing: 0.5px;
+  }
+
+  /* 3. FLUID MAIN VIEW */
+  .main-view {
+    padding-top: 120px !important;
+    padding-bottom: 110px !important;
+    background: #080808;
+  }
+  .section-title {
+    font-size: 24px !important;
+    margin: 24px 0 16px 0 !important;
+    padding: 0 16px;
+  }
+  .cards-grid {
+    padding: 0 16px !important;
+    gap: 20px !important;
+  }
+
+  /* 4. FLOATING AURA PLAYER */
+  .playback-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 12px;
+    right: 12px;
+    height: 64px;
+    background: rgba(18, 18, 18, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    z-index: 2000;
+    padding: 0 12px;
+  }
+  .now-playing {
+    width: 70% !important;
+  }
+  .player-controls {
+    width: 30% !important;
+  }
+  .player-buttons {
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    padding: 0 !important;
+  }
+  .playback-timeline, .volume-controls, .player-btn:not(.play-pause-btn) {
+    display: none !important;
+  }
+  .now-playing-img {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 8px;
+  }
+}
