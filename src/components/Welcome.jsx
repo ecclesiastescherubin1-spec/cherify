@@ -1,14 +1,16 @@
 import { useContext, useState } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
-import { Music, Mail, Lock, User, ArrowRight, Check, ShieldCheck } from 'lucide-react';
+import { Music, Mail, Lock, User, ArrowRight, Check, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 const Welcome = () => {
   const { setShowWelcome, setPreferredArtists, preferredArtists, login, register, updateUserProfile, user, loginAnonymously } = useContext(PlayerContext);
-  const [stage, setStage] = useState('intro'); // 'intro', 'auth', 'artists'
+  const [stage, setStage] = useState('intro'); // 'intro', 'auth', 'artists', 'forgot', 'reset-success'
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [isFinishing, setIsFinishing] = useState(false);
 
@@ -59,13 +61,29 @@ const Welcome = () => {
 
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
     try {
       if (isLogin) await login({ email, password });
       else await register({ email, password, name });
       setStage('artists');
     } catch (err) {
-      alert("Authentication failed: " + err.message);
+      setError(err.message);
     }
+    setIsLoading(false);
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    try {
+      await resetPassword(email);
+      setStage('reset-success');
+    } catch (err) {
+      setError(err.message);
+    }
+    setIsLoading(false);
   };
 
   const toggleArtist = (artist) => {
@@ -121,10 +139,16 @@ const Welcome = () => {
                 <Lock size={20} />
                 <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
-              <button type="submit" className="btn-main full-width">
-                {isLogin ? 'Sign In' : 'Sign Up'} <ShieldCheck size={20} />
+              <button type="submit" className="btn-main full-width" disabled={isLoading}>
+                {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')} <ShieldCheck size={20} />
               </button>
+              {isLogin && (
+                <button type="button" className="forgot-password-link" onClick={() => setStage('forgot')}>
+                  Forgot password?
+                </button>
+              )}
             </form>
+            {error && <div className="auth-error-simple">{error}</div>}
             <button className="btn-secondary full-width" style={{ marginTop: '12px', border: '1px solid rgba(255,255,255,0.1)', padding: '14px' }} onClick={() => setStage('artists')}>
               Continue as Guest
             </button>
@@ -134,6 +158,45 @@ const Welcome = () => {
             </p>
           </div>
         )}
+
+        {stage === 'forgot' && (
+          <div className="auth-card-perfect">
+             <button className="back-btn-simple" onClick={() => setStage('auth')}>
+              <ArrowLeft size={20} />
+            </button>
+            <div className="auth-card-header">
+              <h2>Reset Access</h2>
+              <p>Enter your email to receive a secure reset link.</p>
+            </div>
+            <form onSubmit={handleResetPassword} className="auth-form-perfect">
+              <div className="input-field-perfect">
+                <Mail size={20} />
+                <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+              <button type="submit" className="btn-main full-width" disabled={isLoading}>
+                {isLoading ? 'Sending...' : 'Send Reset Link'} <ShieldCheck size={20} />
+              </button>
+            </form>
+            {error && <div className="auth-error-simple">{error}</div>}
+          </div>
+        )}
+
+        {stage === 'reset-success' && (
+          <div className="auth-card-perfect text-center">
+            <div className="success-icon-large">
+              <Check size={48} />
+            </div>
+            <h2>Check Email</h2>
+            <p className="success-description">
+              A secure reset link has been sent to <strong>{email}</strong>. 
+              Follow the instructions to set your new password.
+            </p>
+            <button className="btn-main full-width" onClick={() => setStage('auth')}>
+              Back to Sign In
+            </button>
+          </div>
+        )}
+
 
         {stage === 'artists' && (
           <div className="artist-selection-perfect">
@@ -213,6 +276,32 @@ const Welcome = () => {
         .pill-img img { width: 100%; height: 100%; object-fit: cover; }
         .pill-check { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(99, 102, 241, 0.4); display: flex; align-items: center; justify-content: center; color: white; }
         .pill-name { color: white; font-weight: 700; font-size: 16px; }
+
+        .forgot-password-link {
+          background: none; border: none; color: rgba(255,255,255,0.4);
+          font-size: 14px; margin-top: 12px; cursor: pointer; transition: color 0.3s;
+          text-align: right; width: 100%;
+        }
+        .forgot-password-link:hover { color: white; text-decoration: underline; }
+
+        .auth-error-simple {
+          margin-top: 16px; color: #ef4444; font-size: 13px; text-align: center;
+          padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 12px;
+        }
+
+        .success-icon-large {
+          width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1);
+          border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 24px; color: #10b981; border: 2px solid rgba(16, 185, 129, 0.2);
+        }
+        .success-description { color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 32px; }
+        .text-center { text-align: center; }
+
+        .back-btn-simple {
+          background: none; border: none; color: rgba(255,255,255,0.4);
+          margin-bottom: 24px; cursor: pointer; transition: color 0.3s;
+        }
+        .back-btn-simple:hover { color: white; }
 
         @keyframes floatUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
