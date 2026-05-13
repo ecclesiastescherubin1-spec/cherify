@@ -3,7 +3,7 @@ import { PlayerContext } from '../context/PlayerContext';
 import { Music, Mail, Lock, User, ArrowRight, Check, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 const Welcome = () => {
-  const { setShowWelcome, setPreferredArtists, preferredArtists, login, register, updateUserProfile, user, loginAnonymously } = useContext(PlayerContext);
+  const { setShowWelcome, setPreferredArtists, preferredArtists, login, register, updateUserProfile, user, loginAnonymously, resetPassword } = useContext(PlayerContext);
   const [stage, setStage] = useState('intro'); // 'intro', 'auth', 'artists', 'forgot', 'reset-success'
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
