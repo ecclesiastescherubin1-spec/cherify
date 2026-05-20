@@ -256,12 +256,13 @@ export const PlayerProvider = ({ children }) => {
   const toggleAlbumSelection = async (album) => {
     if (!user) return;
     const userDocRef = doc(db, 'users', user.id);
-    const exists = userAlbums.find(a => a.id === album.id);
+    const safeAlbums = userAlbums || [];
+    const exists = safeAlbums.find(a => a.id === album.id);
     let updatedAlbums;
     if (exists) {
-      updatedAlbums = userAlbums.filter(a => a.id !== album.id);
+      updatedAlbums = safeAlbums.filter(a => a.id !== album.id);
     } else {
-      updatedAlbums = [...userAlbums, { id: album.id, name: album.name || album.title || 'Unknown Album', img: album.img || album.coverUrl || '', artist: album.artist || 'Unknown Artist', type: 'album' }];
+      updatedAlbums = [...safeAlbums, { id: album.id, name: album.name || album.title || 'Unknown Album', img: album.img || album.coverUrl || '', artist: album.artist || 'Unknown Artist', type: 'album' }];
     }
     await updateDoc(userDocRef, { albums: updatedAlbums });
   };
@@ -318,20 +319,22 @@ export const PlayerProvider = ({ children }) => {
   const toggleArtistSelection = async (artist) => {
     if (user) {
       const userDocRef = doc(db, 'users', user.id);
-      const exists = preferredArtists.find(a => a.id === artist.id);
+      const safeArtists = preferredArtists || [];
+      const exists = safeArtists.find(a => a.id === artist.id);
       let updatedArtists;
       if (exists) {
-        updatedArtists = preferredArtists.filter(a => a.id !== artist.id);
+        updatedArtists = safeArtists.filter(a => a.id !== artist.id);
       } else {
-        updatedArtists = [...preferredArtists, { id: artist.id, name: artist.name || artist.title || 'Unknown', img: artist.img || artist.coverUrl || '', type: 'artist' }];
+        updatedArtists = [...safeArtists, { id: artist.id, name: artist.name || artist.title || 'Unknown', img: artist.img || artist.coverUrl || '', type: 'artist' }];
       }
       await updateDoc(userDocRef, {
         preferredArtists: updatedArtists
       });
     } else {
       setSelectedArtists(prev => {
-        const exists = prev.find(a => a.id === artist.id);
-        return exists ? prev.filter(a => a.id !== artist.id) : [...prev, artist];
+        const safePrev = prev || [];
+        const exists = safePrev.find(a => a.id === artist.id);
+        return exists ? safePrev.filter(a => a.id !== artist.id) : [...safePrev, artist];
       });
     }
   };
