@@ -109,16 +109,16 @@ export default async function handler(req, res) {
         finalLyrics = lyricsObj?.lyrics || '';
       } catch (e) {}
 
-      if (!finalLyrics || finalLyrics.length < 10) {
-        finalLyrics = await httpsGet(`https://lrclib.net/api/search?track_name=${encodeURIComponent(songName)}&artist_name=${encodeURIComponent(artistName)}`);
-        if (!finalLyrics) {
+      if (!finalLyrics || typeof finalLyrics !== 'string' || finalLyrics.length < 10) {
+        let lrcData = await httpsGet(`https://lrclib.net/api/search?track_name=${encodeURIComponent(songName)}&artist_name=${encodeURIComponent(artistName)}`);
+        if (!lrcData || !Array.isArray(lrcData) || lrcData.length === 0) {
           const cleanSong = songName.split('(')[0].split('-')[0].trim();
-          finalLyrics = await httpsGet(`https://lrclib.net/api/search?track_name=${encodeURIComponent(cleanSong)}&artist_name=${encodeURIComponent(artistName)}`);
+          lrcData = await httpsGet(`https://lrclib.net/api/search?track_name=${encodeURIComponent(cleanSong)}&artist_name=${encodeURIComponent(artistName)}`);
         }
-        if (!finalLyrics) {
-          const lrcData = await httpsGet(`https://lrclib.net/api/search?q=${encodeURIComponent(artistName + ' ' + songName)}`);
-          finalLyrics = lrcData && lrcData[0] ? (lrcData[0].lyrics || lrcData[0].plainLyrics || '') : '';
+        if (!lrcData || !Array.isArray(lrcData) || lrcData.length === 0) {
+          lrcData = await httpsGet(`https://lrclib.net/api/search?q=${encodeURIComponent(artistName + ' ' + songName)}`);
         }
+        finalLyrics = lrcData && lrcData[0] ? (lrcData[0].lyrics || lrcData[0].plainLyrics || '') : '';
       }
       return res.end(JSON.stringify({ lyrics: finalLyrics || '' }));
     }

@@ -133,7 +133,7 @@ const RightSidebar = () => {
               <Loader size={20} className="spin-animation" color="var(--accent-primary)" />
               <span>Fetching lyrics...</span>
             </div>
-          ) : lyrics ? (
+          ) : (lyrics && typeof lyrics === 'string') ? (
             <div className="rs-lyrics-content">
               {lyrics.split('\n').map((line, idx) => (
                 <p key={idx} className="rs-lyrics-line">{line}</p>
