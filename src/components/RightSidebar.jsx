@@ -1,11 +1,10 @@
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
 import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader } from 'lucide-react';
 import { searchMusic } from '../services/musicService';
 
 const RightSidebar = () => {
-  const { currentTrack, toggleFullscreen, likedSongs, toggleLike, progress, seek } = useContext(PlayerContext);
-  const containerRef = useRef(null);
+  const { currentTrack, toggleFullscreen, likedSongs, toggleLike, progress } = useContext(PlayerContext);
   const [artistImg, setArtistImg] = useState('');
   const [activeTab, setActiveTab] = useState('artist');
   const [lyrics, setLyrics] = useState('');
@@ -91,18 +90,6 @@ const RightSidebar = () => {
     return progress >= line.time && (!nextLine || progress < nextLine.time);
   });
 
-  useEffect(() => {
-    if (containerRef.current) {
-      const activeEl = containerRef.current.querySelector('.rs-lyrics-line-active');
-      if (activeEl) {
-        containerRef.current.scrollTo({
-          top: activeEl.offsetTop - containerRef.current.clientHeight / 2 + activeEl.clientHeight / 2,
-          behavior: 'smooth'
-        });
-      }
-    }
-  }, [activeLineIndex]);
-
   const isSongLiked = currentTrack && likedSongs?.some(s => s.id === currentTrack.id);
 
   const handleShare = () => {
@@ -187,19 +174,16 @@ const RightSidebar = () => {
               <span>Fetching lyrics...</span>
             </div>
           ) : parsedLrc.length > 0 ? (
-            <div className="rs-synced-lyrics-scroll" ref={containerRef}>
-              {parsedLrc.map((line, idx) => {
-                const isActive = idx === activeLineIndex;
-                return (
-                  <p 
-                    key={idx} 
-                    className={`rs-lyrics-line-synced ${isActive ? 'rs-lyrics-line-active' : ''}`}
-                    onClick={() => seek(line.time)}
-                  >
-                    {line.text}
-                  </p>
-                );
-              })}
+            <div className="rs-synced-lyrics">
+              <div className="rs-lyrics-prev">
+                {activeLineIndex > 0 ? parsedLrc[activeLineIndex - 1].text : (activeLineIndex === 0 ? "• • •" : "")}
+              </div>
+              <div className="rs-lyrics-current">
+                {activeLineIndex >= 0 ? parsedLrc[activeLineIndex].text : "🎵 " + currentTrack.title + " 🎵"}
+              </div>
+              <div className="rs-lyrics-next">
+                {activeLineIndex + 1 < parsedLrc.length ? parsedLrc[activeLineIndex + 1].text : ""}
+              </div>
             </div>
           ) : (lyrics && typeof lyrics === 'string') ? (
             <div className="rs-lyrics-content scrollable">
