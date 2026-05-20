@@ -292,11 +292,10 @@ ul {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--glass-border);
   border-radius: 24px;
-  padding: 24px;
+  padding: 20px 8px 20px 20px;
   min-height: 250px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -317,9 +316,29 @@ ul {
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
   text-align: center;
-  max-height: 350px;
+  max-height: 320px;
   overflow-y: auto;
-  padding-right: 8px;
+  padding: 10px 12px 30px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* Custom Scrollbar for Lyrics */
+.rs-lyrics-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.rs-lyrics-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rs-lyrics-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.rs-lyrics-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .rs-lyrics-line {
