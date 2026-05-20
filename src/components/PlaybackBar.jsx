@@ -102,7 +102,6 @@ const PlaybackBar = () => {
         <button className={`player-btn ${activeView === 'queue' ? 'active' : ''}`} onClick={() => setActiveView('queue')}>
           <ListMusic size={16} color={activeView === 'queue' ? 'var(--text-bright-accent)' : 'currentColor'} />
         </button>
-        <button className="player-btn"><MonitorSpeaker size={16} /></button>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button className="player-btn" onClick={toggleMute}>
