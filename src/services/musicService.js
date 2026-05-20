@@ -16,6 +16,15 @@ export const searchMusic = async (query, type = 'song', limit = 20) => {
     const data = await response.json();
     if (!Array.isArray(data)) return [];
 
+    if (type === 'artist') {
+      return data.map(item => ({
+        id: item.id,
+        name: cleanTitle(item.name),
+        img: item.img,
+        type: 'artist'
+      }));
+    }
+
     return data.map(item => ({
       id: item.id,
       title: cleanTitle(item.title),
@@ -24,7 +33,8 @@ export const searchMusic = async (query, type = 'song', limit = 20) => {
       coverUrl: item.coverUrl,
       encryptedUrl: item.encryptedUrl,
       duration: item.duration,
-      streamUrl: null
+      streamUrl: null,
+      type: 'song'
     }));
   } catch (err) {
     console.error("Internal search failed:", err);

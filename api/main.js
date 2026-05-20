@@ -37,9 +37,21 @@ export default async function handler(req, res) {
   try {
     if (pathname.includes('/api/search')) {
       const query = searchParams.get('q');
-      const result = await m.Song.search({ query });
-      const songs = (result?.results || result?.data?.results || []).slice(0, 20);
-      return res.end(JSON.stringify(songs.map(formatSong)));
+      const type = searchParams.get('type') || 'song';
+      
+      if (type === 'artist') {
+        const result = await m.Artist.search({ query });
+        const artists = (result?.results || result?.data?.results || []).slice(0, 20);
+        return res.end(JSON.stringify(artists.map(a => ({
+          id: a.id,
+          name: a.name || a.title || 'Unknown',
+          img: a.images?.[2]?.url || a.images?.[1]?.url || a.images?.[0]?.url || ''
+        }))));
+      } else {
+        const result = await m.Song.search({ query });
+        const songs = (result?.results || result?.data?.results || []).slice(0, 20);
+        return res.end(JSON.stringify(songs.map(formatSong)));
+      }
     }
 
     if (pathname.includes('/api/trending')) {

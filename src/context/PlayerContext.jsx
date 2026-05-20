@@ -308,16 +308,19 @@ export const PlayerProvider = ({ children }) => {
     // UI will update automatically via the onSnapshot listener
   };
 
-  const toggleArtistSelection = (artist) => {
-    setSelectedArtists(prev => {
-      const exists = prev.find(a => a.id === artist.id);
-      if (exists) {
-        return prev.filter(a => a.id !== artist.id);
-      } else {
-        return [...prev, artist];
-      }
-    });
-    // Also switch to home view to show the artists section
+  const toggleArtistSelection = async (artist) => {
+    if (user) {
+      const userDocRef = doc(db, 'users', user.id);
+      const exists = preferredArtists.find(a => a.id === artist.id);
+      await updateDoc(userDocRef, {
+        preferredArtists: exists ? arrayRemove(exists) : arrayUnion(artist)
+      });
+    } else {
+      setSelectedArtists(prev => {
+        const exists = prev.find(a => a.id === artist.id);
+        return exists ? prev.filter(a => a.id !== artist.id) : [...prev, artist];
+      });
+    }
     setActiveView('home');
   };
 

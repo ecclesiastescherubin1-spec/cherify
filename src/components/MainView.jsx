@@ -57,6 +57,16 @@ const MainView = () => {
   const [searchMode, setSearchMode] = useState('song');
   const [isSearching, setIsSearching] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchHistory, setSearchHistory] = useState(() => JSON.parse(localStorage.getItem('searchHistory') || '[]'));
+  
+  const addToSearchHistory = (item) => {
+    setSearchHistory(prev => {
+      const filtered = prev.filter(x => x.id !== item.id);
+      const updated = [item, ...filtered].slice(0, 15);
+      localStorage.setItem('searchHistory', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -205,6 +215,7 @@ const MainView = () => {
               <h2 className="section-title">Top Results</h2>
               <div className="search-tabs">
                 <button className={`search-tab ${searchMode === 'song' ? 'active' : ''}`} onClick={() => setSearchMode('song')}>Songs</button>
+                <button className={`search-tab ${searchMode === 'artist' ? 'active' : ''}`} onClick={() => setSearchMode('artist')}>Artists</button>
                 <button className={`search-tab ${searchMode === 'album' ? 'active' : ''}`} onClick={() => setSearchMode('album')}>Albums</button>
               </div>
               <div className="cards-grid">
@@ -213,19 +224,71 @@ const MainView = () => {
                     key={item.id} 
                     title={item.title || item.name} 
                     desc={item.artist} 
-                    img={item.coverUrl} 
+                    img={item.coverUrl || item.img} 
                     isLiked={likedSongs.some(s => s.id === item.id)} 
-                    onPlay={() => searchMode === 'song' ? handlePlay(item, searchResults) : setActiveView(`album-${item.id}`)} 
-                    onLike={() => searchMode === 'song' ? toggleLike(item) : addAlbum({ id: item.id, name: item.title, artist: item.artist, img: item.coverUrl })} 
+                    isArtist={searchMode === 'artist' || item.type === 'artist'}
+                    onPlay={() => {
+                      addToSearchHistory(item);
+                      if (searchMode === 'song' || item.type === 'song') handlePlay(item, searchResults);
+                      else if (searchMode === 'artist' || item.type === 'artist') setActiveView(`artist-${item.id}`);
+                      else setActiveView(`album-${item.id}`);
+                    }} 
+                    onLike={() => {
+                      if (searchMode === 'song' || item.type === 'song') toggleLike(item);
+                      else if (searchMode === 'artist' || item.type === 'artist') {
+                        // For artists, we toggle via preferredArtists? Actually toggleArtistSelection if available
+                        const isPref = preferredArtists.some(a => a.id === item.id);
+                        if (!isPref) {
+                           // Try to use toggleArtistSelection from context (which handles the selection)
+                           // Wait, toggleArtistSelection might just be for the onboarding. We need a way to add to preferredArtists
+                           // Let's assume we can just do toggleArtistSelection or similar logic. Let's look at PlayerContext.
+                           toggleArtistSelection(item);
+                        } else {
+                           toggleArtistSelection(item);
+                        }
+                      } else {
+                        addAlbum({ id: item.id, name: item.title, artist: item.artist, img: item.coverUrl });
+                      }
+                    }} 
                     onAdd={() => handleAddToPlaylist(item)}
                     isPlayingTrack={currentTrack?.id === item.id}
-                    isAlbumMode={searchMode === 'album'}
+                    isAlbumMode={searchMode === 'album' || item.type === 'album'}
                   />
                 ))}
               </div>
             </>
           ) : (
             <>
+              {searchHistory.length > 0 && (
+                <div style={{ marginBottom: '32px' }}>
+                  <h2 className="section-title">Recent Searches</h2>
+                  <div className="cards-grid">
+                    {searchHistory.map(item => (
+                      <Card 
+                        key={`hist-${item.id}`} 
+                        title={item.title || item.name} 
+                        desc={item.artist || 'Artist'} 
+                        img={item.coverUrl || item.img} 
+                        isLiked={likedSongs.some(s => s.id === item.id)} 
+                        isArtist={item.type === 'artist'}
+                        onPlay={() => {
+                          if (item.type === 'song' || (!item.type && item.artist)) handlePlay(item, searchHistory);
+                          else if (item.type === 'artist') setActiveView(`artist-${item.id}`);
+                          else setActiveView(`album-${item.id}`);
+                        }} 
+                        onLike={() => {
+                          if (item.type === 'song' || (!item.type && item.artist)) toggleLike(item);
+                          else if (item.type === 'artist') toggleArtistSelection(item);
+                          else addAlbum({ id: item.id, name: item.title, artist: item.artist, img: item.coverUrl });
+                        }} 
+                        onAdd={() => handleAddToPlaylist(item)}
+                        isPlayingTrack={currentTrack?.id === item.id}
+                        isAlbumMode={item.type === 'album'}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
               <h2 className="section-title">Browse all</h2>
               <div className="browse-grid">
                 {categories.map((cat, i) => (
@@ -293,6 +356,15 @@ const MainView = () => {
       <section>
         <h2 className="section-title">Your Artists</h2>
         <div className="cards-grid">
+          <div className="card add-card-perfect" onClick={() => { setSearchMode('artist'); setActiveView('search'); }}>
+            <div className="card-img-container plus-tile">
+              <Plus size={48} color="rgba(255,255,255,0.4)" />
+            </div>
+            <div className="card-info-footer">
+              <div className="card-title">Add Artist</div>
+              <div className="card-desc">Find more artists</div>
+            </div>
+          </div>
           {(Array.isArray(preferredArtists) ? preferredArtists : []).map(a => (
             <Card key={a.id} title={a.name} desc="Artist" img={a.img} isArtist onPlay={() => setActiveView(`artist-${a.id}`)} />
           ))}
