@@ -17,15 +17,22 @@ const httpsGet = (url) => new Promise((resolve, reject) => {
   get(url);
 });
 
-const formatSong = (song) => ({
-  id: song.id,
-  title: song.name || song.title || 'Unknown',
-  artist: song.artists?.primary?.[0]?.name || 'Unknown Artist',
-  album: song.album?.title || song.album?.name || '',
-  coverUrl: song.images?.[2]?.url || song.images?.[1]?.url || song.images?.[0]?.url || '',
-  duration: song.duration || 0,
-  encryptedUrl: song.media?.encryptedUrl || ''
-});
+const formatSong = (song) => {
+  let img = song.images?.[2]?.url || song.images?.[1]?.url || song.images?.[0]?.url || '';
+  img = img.replace(/50x50|150x150/g, '500x500');
+  if (!img || img.includes('default')) {
+    img = `https://ui-avatars.com/api/?name=${encodeURIComponent(song.name || song.title || 'Song')}&background=random&size=500&font-size=0.33`;
+  }
+  return {
+    id: song.id,
+    title: song.name || song.title || 'Unknown',
+    artist: song.artists?.primary?.[0]?.name || 'Unknown Artist',
+    album: song.album?.title || song.album?.name || '',
+    coverUrl: img,
+    duration: song.duration || 0,
+    encryptedUrl: song.media?.encryptedUrl || ''
+  };
+};
 
 export default async function handler(req, res) {
   const { pathname, searchParams } = new URL(req.url, `http://${req.headers.host}`);
@@ -42,11 +49,19 @@ export default async function handler(req, res) {
       if (type === 'artist') {
         const result = await m.Artist.search({ query });
         const artists = (result?.results || result?.data?.results || []).slice(0, 20);
-        return res.end(JSON.stringify(artists.map(a => ({
-          id: a.id,
-          name: a.name || a.title || 'Unknown',
-          img: a.images?.[2]?.url || a.images?.[1]?.url || a.images?.[0]?.url || ''
-        }))));
+        return res.end(JSON.stringify(artists.map(a => {
+          let imageUrl = a.images?.[2]?.url || a.images?.[1]?.url || a.images?.[0]?.url || a.image?.[2]?.link || a.image?.[0]?.link || '';
+          imageUrl = imageUrl.replace(/50x50|150x150/g, '500x500');
+          // If the image is a default placeholder or missing, use a nice UI avatar
+          if (!imageUrl || imageUrl.includes('default') || imageUrl.includes('artist-default') || imageUrl.includes('missing')) {
+            imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(a.name || 'Artist')}&background=random&size=500&font-size=0.33`;
+          }
+          return {
+            id: a.id,
+            name: a.name || a.title || 'Unknown',
+            img: imageUrl
+          };
+        })));
       } else {
         const result = await m.Song.search({ query });
         const songs = (result?.results || result?.data?.results || []).slice(0, 20);
