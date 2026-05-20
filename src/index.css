@@ -2009,3 +2009,19 @@ ul {
     transform: scale(1);
   }
 }
+
+.search-tag-item {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.search-tag-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: var(--accent-primary) !important;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.search-tag-item:active {
+  transform: translateY(0);
+}

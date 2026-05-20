@@ -59,6 +59,24 @@ const MainView = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchHistory, setSearchHistory] = useState(() => JSON.parse(localStorage.getItem('searchHistory') || '[]'));
+  const [recentQueries, setRecentQueries] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('recentSearchQueries') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const saveSearchQuery = (query) => {
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.length < 2) return;
+    setRecentQueries(prev => {
+      const filtered = prev.filter(q => q.toLowerCase() !== trimmed.toLowerCase());
+      const updated = [trimmed, ...filtered].slice(0, 8);
+      localStorage.setItem('recentSearchQueries', JSON.stringify(updated));
+      return updated;
+    });
+  };
   
   const addToSearchHistory = (item) => {
     setSearchHistory(prev => {
@@ -109,6 +127,7 @@ const MainView = () => {
       if (searchQuery.trim().length > 0) {
         setIsSearching(true);
         setIsLoading(true);
+        saveSearchQuery(searchQuery);
         if (searchMode === 'song') {
           try {
             const [saavnRes, ytRes] = await Promise.all([
@@ -334,6 +353,57 @@ const MainView = () => {
             </>
           ) : (
             <>
+              {recentQueries.length > 0 && (
+                <div style={{ marginBottom: '32px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h2 className="section-title" style={{ margin: 0 }}>Recent Searches</h2>
+                    <button 
+                      onClick={() => {
+                        setRecentQueries([]);
+                        localStorage.removeItem('recentSearchQueries');
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--accent-primary)',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        padding: '4px 8px'
+                      }}
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    {recentQueries.map((q, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setSearchQuery(q);
+                        }}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.04)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: '24px',
+                          padding: '8px 16px',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          color: 'rgba(255, 255, 255, 0.85)',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                        className="search-tag-item"
+                      >
+                        🔍 {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {history.length > 0 && (
                 <div style={{ marginBottom: '32px', maxWidth: '600px' }}>
                   <h2 className="section-title">Recently Played Songs</h2>
