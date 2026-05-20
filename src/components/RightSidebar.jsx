@@ -1,11 +1,14 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
-import { MoreHorizontal, Maximize2, Share2, CheckCircle2 } from 'lucide-react';
+import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader } from 'lucide-react';
 import { searchMusic } from '../services/musicService';
 
 const RightSidebar = () => {
   const { currentTrack, toggleFullscreen, likedSongs, toggleLike } = useContext(PlayerContext);
   const [artistImg, setArtistImg] = useState('');
+  const [activeTab, setActiveTab] = useState('artist');
+  const [lyrics, setLyrics] = useState('');
+  const [lyricsLoading, setLyricsLoading] = useState(false);
 
   useEffect(() => {
     if (!currentTrack?.artist) return;
@@ -24,6 +27,28 @@ const RightSidebar = () => {
     };
     fetchArtistImage();
   }, [currentTrack?.artist, currentTrack?.coverUrl]);
+
+  useEffect(() => {
+    setLyrics('');
+  }, [currentTrack?.id]);
+
+  useEffect(() => {
+    if (!currentTrack?.id || activeTab !== 'lyrics') return;
+    const fetchLyrics = async () => {
+      setLyricsLoading(true);
+      try {
+        const response = await fetch(`/api/lyrics?id=${currentTrack.id}&title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.artist)}`);
+        const data = await response.json();
+        setLyrics(data.lyrics || '');
+      } catch (err) {
+        console.error("Error fetching lyrics:", err);
+        setLyrics('');
+      } finally {
+        setLyricsLoading(false);
+      }
+    };
+    fetchLyrics();
+  }, [currentTrack?.id, activeTab]);
 
   const isSongLiked = currentTrack && likedSongs?.some(s => s.id === currentTrack.id);
 
@@ -76,25 +101,49 @@ const RightSidebar = () => {
         </div>
       </div>
 
-      <div className="rs-about-artist">
-        <div className="rs-artist-card">
-          <img src={artistImg || currentTrack.coverUrl} className="rs-artist-img" alt="" />
-          <div className="rs-artist-overlay">
-            <span className="rs-about-label">About the artist</span>
-            <h3 className="rs-artist-name">{currentTrack.artist}</h3>
-          </div>
-        </div>
-        <div className="rs-artist-stats">
-          <div className="stat-item">
-            <span className="stat-value">24.5M</span>
-            <span className="stat-label">Monthly Listeners</span>
-          </div>
-          <p className="rs-artist-bio">
-            Exploring the boundaries of sound with {currentTrack.artist}. 
-            A leading voice in the current high-fidelity music scene.
-          </p>
-        </div>
+      <div className="rs-tabs">
+        <button className={`rs-tab ${activeTab === 'artist' ? 'active' : ''}`} onClick={() => setActiveTab('artist')}>Artist</button>
+        <button className={`rs-tab ${activeTab === 'lyrics' ? 'active' : ''}`} onClick={() => setActiveTab('lyrics')}>Lyrics</button>
       </div>
+
+      {activeTab === 'artist' ? (
+        <div className="rs-about-artist">
+          <div className="rs-artist-card">
+            <img src={artistImg || currentTrack.coverUrl} className="rs-artist-img" alt="" />
+            <div className="rs-artist-overlay">
+              <span className="rs-about-label">About the artist</span>
+              <h3 className="rs-artist-name">{currentTrack.artist}</h3>
+            </div>
+          </div>
+          <div className="rs-artist-stats">
+            <div className="stat-item">
+              <span className="stat-value">24.5M</span>
+              <span className="stat-label">Monthly Listeners</span>
+            </div>
+            <p className="rs-artist-bio">
+              Exploring the boundaries of sound with {currentTrack.artist}. 
+              A leading voice in the current high-fidelity music scene.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="rs-lyrics-section">
+          {lyricsLoading ? (
+            <div className="rs-lyrics-loading">
+              <Loader size={20} className="spin-animation" color="var(--accent-primary)" />
+              <span>Fetching lyrics...</span>
+            </div>
+          ) : lyrics ? (
+            <div className="rs-lyrics-content">
+              {lyrics.split('\n').map((line, idx) => (
+                <p key={idx} className="rs-lyrics-line">{line}</p>
+              ))}
+            </div>
+          ) : (
+            <div className="rs-lyrics-empty">Lyrics not available for this song</div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

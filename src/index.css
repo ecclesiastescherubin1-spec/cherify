@@ -101,6 +101,7 @@ ul {
   gap: 20px;
   overflow-y: auto;
   overflow-x: hidden;
+  min-height: 0; /* Prevents container from stretching grid row 1 */
 }
 
 .empty-state-sidebar {
@@ -251,6 +252,86 @@ ul {
   font-size: 14px;
   color: var(--text-subdued);
   line-height: 1.5;
+}
+
+/* Right Sidebar Tabs */
+.rs-tabs {
+  display: flex;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.rs-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-subdued);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rs-tab:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.rs-tab.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Right Sidebar Lyrics */
+.rs-lyrics-section {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 20px;
+  overflow-y: visible; /* Let parent scrollbar handle it, or we can make it scrollable */
+  min-height: 150px;
+}
+
+.rs-lyrics-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-subdued);
+  font-size: 14px;
+  padding: 40px 0;
+}
+
+.rs-lyrics-content {
+  font-size: 15px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+.rs-lyrics-line {
+  margin-bottom: 12px;
+  transition: color 0.2s ease;
+}
+
+.rs-lyrics-line:hover {
+  color: white;
+}
+
+.rs-lyrics-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-subdued);
+  font-size: 14px;
+  padding: 40px 0;
+  text-align: center;
 }
 
 .sidebar {
