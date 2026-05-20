@@ -33,7 +33,7 @@ const RightSidebar = () => {
       }
     };
     fetchLyrics();
-  }, [currentTrack?.id, activeTab]);
+  }, [currentTrack?.id]);
 
   useEffect(() => {
     if (!syncedLyrics) {
