@@ -78,20 +78,6 @@ ul {
   gap: 16px;
 }
 
-@media (max-width: 1200px) {
-  .app-container {
-    grid-template-columns: 240px 1fr 280px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .app-container {
-    grid-template-columns: 240px 1fr; /* Hide right sidebar on smaller screens */
-  }
-  .right-sidebar {
-    display: none;
-  }
-}
 
 .right-sidebar {
   grid-column: 3;
@@ -956,130 +942,7 @@ ul {
   z-index: 1;
 }
 /* Responsive Design */
-@media (max-width: 768px) {
-  .app-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto 90px;
-    padding: 0;
-    gap: 0;
-  }
 
-  .sidebar {
-    display: none;
-  }
-
-  .main-view {
-    grid-column: 1;
-    border-radius: 0;
-  }
-
-  .topbar {
-    padding: 12px 16px;
-  }
-
-  .topbar-nav-btn, .btn-primary, .btn-secondary {
-    display: none; /* Hide non-essential topbar items on mobile */
-  }
-  
-  .topbar-nav {
-    flex: 1;
-  }
-  
-  .search-bar-container input {
-    width: 100% !important;
-  }
-
-  .playback-bar {
-    grid-row: 3;
-    padding: 0 8px;
-    flex-direction: column;
-    justify-content: center;
-    height: auto;
-    padding-bottom: 8px;
-    background-color: #000;
-  }
-
-  .now-playing {
-    width: 100%;
-    min-width: 0;
-    padding: 8px;
-    background-color: #282828;
-    border-radius: 8px;
-    margin-bottom: 4px;
-  }
-  
-  .now-playing-img {
-    width: 40px;
-    height: 40px;
-  }
-
-  .player-controls {
-    width: 100%;
-    max-width: none;
-  }
-  
-  .player-buttons {
-    gap: 16px;
-  }
-
-  .volume-controls {
-    display: none;
-  }
-
-  .mobile-nav {
-    grid-row: 2;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background-color: rgba(0,0,0,0.9);
-    backdrop-filter: blur(10px);
-    padding: 8px 0;
-    border-top: 1px solid #282828;
-    z-index: 20;
-  }
-
-  .mobile-nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    color: var(--text-subdued);
-    font-size: 10px;
-    cursor: pointer;
-  }
-
-  .mobile-nav-item.active {
-    color: var(--text-base);
-  }
-
-  .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-  }
-  
-  .card {
-    padding: 12px;
-  }
-
-  .section-title {
-    font-size: 20px;
-  }
-  
-  .liked-songs-list h1 {
-    font-size: 48px !important;
-  }
-  
-  .liked-songs-list table th:nth-child(3),
-  .liked-songs-list table td:nth-child(3) {
-    display: none; /* Hide album on mobile */
-  }
-}
-
-@media (min-width: 769px) {
-  .mobile-nav {
-    display: none;
-  }
-}
 
 /* Browse Categories Grid */
 .browse-grid {
@@ -1374,23 +1237,6 @@ ul {
   margin: 8px 0;
 }
 
-@media (max-width: 768px) {
-  .artist-banner-perfect {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 20px;
-  }
-  .artist-banner-img {
-    width: 200px;
-    height: 200px;
-  }
-  .playlist-header-mini {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-}
 
 .active-row {
   background: rgba(255, 255, 255, 0.05);
