@@ -44,6 +44,26 @@ export const PlayerProvider = ({ children }) => {
   const [shuffleMode, setShuffleMode] = useState(false);
   const [selectedArtists, setSelectedArtists] = useState([]);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [accentColor, setAccentColor] = useState(() => localStorage.getItem('cherify-accent') || '#818cf8');
+
+  useEffect(() => {
+    const glowMap = {
+      '#818cf8': 'rgba(129, 140, 248, 0.45)', // Indigo
+      '#ec4899': 'rgba(236, 72, 153, 0.45)', // Pink
+      '#10b981': 'rgba(16, 185, 129, 0.45)', // Green
+      '#06b6d4': 'rgba(6, 182, 212, 0.45)',  // Cyan
+      '#f97316': 'rgba(249, 115, 22, 0.45)'   // Orange
+    };
+    const glowColor = glowMap[accentColor] || 'rgba(129, 140, 248, 0.45)';
+    document.documentElement.style.setProperty('--accent-primary', accentColor);
+    document.documentElement.style.setProperty('--text-bright-accent', accentColor);
+    document.documentElement.style.setProperty('--accent-glow', glowColor);
+  }, [accentColor]);
+
+  const changeAccentColor = (colorHex) => {
+    setAccentColor(colorHex);
+    localStorage.setItem('cherify-accent', colorHex);
+  };
 
   const audioRef = useRef(new Audio());
   const audioContextRef = useRef(null);
@@ -525,7 +545,8 @@ export const PlayerProvider = ({ children }) => {
         else if (document.exitFullscreen) document.exitFullscreen();
       },
       loopMode, toggleLoop: () => setLoopMode(prev => ['none', 'one', 'all'][(['none', 'one', 'all'].indexOf(prev) + 1) % 3]),
-      shuffleMode, setShuffleMode, history, addToPlaylist, resetPassword, updateUserProfile
+      shuffleMode, setShuffleMode, history, addToPlaylist, resetPassword, updateUserProfile,
+      accentColor, changeAccentColor
     }}>
       {children}
     </PlayerContext.Provider>

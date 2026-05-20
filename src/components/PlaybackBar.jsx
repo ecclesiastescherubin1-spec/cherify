@@ -41,6 +41,13 @@ const PlaybackBar = () => {
     setVolume(percent);
   };
 
+  const handleVolumeWheel = (e) => {
+    e.preventDefault();
+    const step = 0.05;
+    const delta = e.deltaY < 0 ? step : -step;
+    setVolume(prev => Math.max(0, Math.min(1, parseFloat((prev + delta).toFixed(2)))));
+  };
+
   const toggleMute = () => {
     if (volume > 0) setVolume(0);
     else setVolume(1);
@@ -103,7 +110,7 @@ const PlaybackBar = () => {
           <ListMusic size={16} color={activeView === 'queue' ? 'var(--text-bright-accent)' : 'currentColor'} />
         </button>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onWheel={handleVolumeWheel}>
           <button className="player-btn" onClick={toggleMute}>
             {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>

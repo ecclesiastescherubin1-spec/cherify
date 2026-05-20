@@ -3,10 +3,25 @@ import { PlayerContext } from '../context/PlayerContext';
 import { Flame, Sparkles } from 'lucide-react';
 
 const Visualizer = () => {
-  const { currentTrack, isPlaying, analyserRef } = useContext(PlayerContext);
+  const { currentTrack, isPlaying, analyserRef, accentColor, changeAccentColor } = useContext(PlayerContext);
   const canvasRef = useRef(null);
   const [style, setStyle] = useState('bars'); // 'bars' or 'wave'
   const animationRef = useRef(null);
+
+  const THEME_COLORS = [
+    { hex: '#818cf8', label: 'Indigo' },
+    { hex: '#ec4899', label: 'Pink' },
+    { hex: '#10b981', label: 'Green' },
+    { hex: '#06b6d4', label: 'Cyan' },
+    { hex: '#f97316', label: 'Orange' }
+  ];
+
+  const hexToRgba = (hex, alpha = 1) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -54,14 +69,14 @@ const Visualizer = () => {
           for (let i = 0; i < bufferLength; i++) {
             barHeight = (dataArray[i] / 255) * h * 0.75;
 
-            // Draw glowing bar with premium neon purple/indigo gradient
+            // Draw glowing bar with premium dynamic neon accent gradient
             const gradient = ctx.createLinearGradient(x, h, x, h - barHeight);
-            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)'); // Indigo
-            gradient.addColorStop(1, 'rgba(139, 92, 246, 0.85)'); // Purple
+            gradient.addColorStop(0, hexToRgba(accentColor, 0.08)); 
+            gradient.addColorStop(1, hexToRgba(accentColor, 0.85)); 
 
             ctx.fillStyle = gradient;
             ctx.shadowBlur = 12;
-            ctx.shadowColor = 'rgba(139, 92, 246, 0.6)';
+            ctx.shadowColor = hexToRgba(accentColor, 0.6);
             
             ctx.fillRect(x, h - barHeight, barWidth - 2, barHeight);
             x += barWidth;
@@ -71,9 +86,9 @@ const Visualizer = () => {
           analyser.getByteTimeDomainData(dataArray);
 
           ctx.lineWidth = 3;
-          ctx.strokeStyle = '#818cf8';
+          ctx.strokeStyle = accentColor;
           ctx.shadowBlur = 15;
-          ctx.shadowColor = 'rgba(129, 140, 248, 0.7)';
+          ctx.shadowColor = hexToRgba(accentColor, 0.7);
           ctx.beginPath();
 
           const sliceWidth = w / bufferLength;
@@ -119,14 +134,14 @@ const Visualizer = () => {
             const barHeight = Math.max(2, bounce * h * 0.75);
             const x = i * (barWidth + gap);
 
-            // Draw glowing bar with premium neon purple/indigo gradient
+            // Draw glowing bar with premium dynamic neon accent gradient
             const gradient = ctx.createLinearGradient(x, h, x, h - barHeight);
-            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)'); // Indigo
-            gradient.addColorStop(1, 'rgba(139, 92, 246, 0.85)'); // Purple
+            gradient.addColorStop(0, hexToRgba(accentColor, 0.08)); 
+            gradient.addColorStop(1, hexToRgba(accentColor, 0.85)); 
 
             ctx.fillStyle = gradient;
             ctx.shadowBlur = 8;
-            ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
+            ctx.shadowColor = hexToRgba(accentColor, 0.5);
             ctx.fillRect(x, h - barHeight, barWidth, barHeight);
           }
         } else {
@@ -145,13 +160,13 @@ const Visualizer = () => {
           }
 
           const gradient = ctx.createLinearGradient(0, 0, w, 0);
-          gradient.addColorStop(0, '#818cf8'); // Indigo
-          gradient.addColorStop(0.5, '#ec4899'); // Pink
-          gradient.addColorStop(1, '#a855f7'); // Violet
+          gradient.addColorStop(0, accentColor); 
+          gradient.addColorStop(0.5, hexToRgba(accentColor, 0.65)); 
+          gradient.addColorStop(1, hexToRgba(accentColor, 0.2)); 
           
           ctx.strokeStyle = gradient;
           ctx.shadowBlur = 15;
-          ctx.shadowColor = 'rgba(236, 72, 153, 0.45)';
+          ctx.shadowColor = hexToRgba(accentColor, 0.45);
           ctx.stroke();
         }
       }
@@ -169,11 +184,32 @@ const Visualizer = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [currentTrack, isPlaying, style]);
+  }, [currentTrack, isPlaying, style, accentColor]);
 
   return (
     <div className="visualizer-wrapper">
       <div className="vis-controls">
+        <div className="theme-picker" style={{ display: 'flex', gap: '6px', marginRight: 'auto', alignItems: 'center' }}>
+          {THEME_COLORS.map(c => (
+            <button 
+              key={c.hex}
+              className={`theme-dot ${accentColor === c.hex ? 'active' : ''}`}
+              style={{ 
+                width: '12px', 
+                height: '12px', 
+                borderRadius: '50%', 
+                border: accentColor === c.hex ? '2px solid white' : '1px solid rgba(255,255,255,0.2)',
+                backgroundColor: c.hex,
+                cursor: 'pointer',
+                padding: 0,
+                boxShadow: accentColor === c.hex ? `0 0 8px ${c.hex}` : 'none',
+                transition: 'all 0.2s'
+              }}
+              onClick={() => changeAccentColor(c.hex)}
+              title={`Accent: ${c.label}`}
+            />
+          ))}
+        </div>
         <button 
           className={`vis-btn ${style === 'bars' ? 'active' : ''}`}
           onClick={() => setStyle('bars')}

@@ -46,7 +46,11 @@ const formatSong = (song) => {
     album: song.album?.title || song.album?.name || '',
     coverUrl: img,
     duration: song.duration || 0,
-    encryptedUrl: song.media?.encryptedUrl || ''
+    encryptedUrl: song.media?.encryptedUrl || '',
+    year: song.year || (song.releaseDate ? song.releaseDate.split('-')[0] : '') || 'Unknown Year',
+    label: song.label || song.copyright || 'Unknown Label',
+    language: song.language || 'Unknown Language',
+    playCount: song.playCount || 'N/A'
   };
 };
 

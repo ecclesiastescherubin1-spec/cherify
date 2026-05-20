@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
-import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader, ListCollapse, AlignCenter } from 'lucide-react';
+import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader, ListCollapse, AlignCenter, Info } from 'lucide-react';
 import Visualizer from './Visualizer';
 
 const RightSidebar = () => {
@@ -9,6 +9,7 @@ const RightSidebar = () => {
   const [syncedLyrics, setSyncedLyrics] = useState('');
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const [showFullLyrics, setShowFullLyrics] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const fullLyricsContainerRef = useRef(null);
 
   useEffect(() => {
@@ -116,7 +117,7 @@ const RightSidebar = () => {
   };
 
   const handleMore = () => {
-    alert("More options: Add to Playlist, View Album, View Artist");
+    setShowInfoModal(true);
   };
 
   if (!currentTrack) return (
@@ -147,9 +148,10 @@ const RightSidebar = () => {
               <p className="rs-artist">{currentTrack.artist}</p>
             </div>
             <div className="rs-status-icons">
-              <Share2 size={20} className="rs-icon" onClick={handleShare} />
+              <Info size={19} className="rs-icon" onClick={() => setShowInfoModal(true)} title="Song Info" />
+              <Share2 size={19} className="rs-icon" onClick={handleShare} />
               <CheckCircle2 
-                size={20} 
+                size={19} 
                 className={isSongLiked ? "rs-icon-check active" : "rs-icon-check"} 
                 onClick={() => toggleLike(currentTrack)}
                 fill={isSongLiked ? 'var(--accent-primary)' : 'none'}
@@ -222,6 +224,67 @@ const RightSidebar = () => {
           <div className="rs-lyrics-empty">Lyrics not available for this song</div>
         )}
       </div>
+
+      {showInfoModal && (
+        <div className="info-modal-backdrop" onClick={() => setShowInfoModal(false)}>
+          <div className="info-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="info-modal-header">
+              <h3>Track Information</h3>
+              <button className="info-modal-close" onClick={() => setShowInfoModal(false)}>×</button>
+            </div>
+            <div className="info-modal-body">
+              <div className="info-modal-item">
+                <span className="info-label">Title</span>
+                <span className="info-value">{currentTrack.title}</span>
+              </div>
+              <div className="info-modal-item">
+                <span className="info-label">Artist</span>
+                <span className="info-value">{currentTrack.artist}</span>
+              </div>
+              <div className="info-modal-item">
+                <span className="info-label">Album</span>
+                <span className="info-value">{currentTrack.album || 'N/A'}</span>
+              </div>
+              <div className="info-modal-item">
+                <span className="info-label">Duration</span>
+                <span className="info-value">{formatTime(currentTrack.duration)}</span>
+              </div>
+              <div className="info-modal-item">
+                <span className="info-label">Source</span>
+                <span className="info-value" style={{ textTransform: 'capitalize' }}>
+                  {currentTrack.type === 'youtube' ? 'YouTube Music' : 'JioSaavn'}
+                </span>
+              </div>
+              {currentTrack.type !== 'youtube' && (
+                <>
+                  <div className="info-modal-item">
+                    <span className="info-label">Year</span>
+                    <span className="info-value">{currentTrack.year || 'N/A'}</span>
+                  </div>
+                  <div className="info-modal-item">
+                    <span className="info-label">Language</span>
+                    <span className="info-value" style={{ textTransform: 'capitalize' }}>
+                      {currentTrack.language || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="info-modal-item">
+                    <span className="info-label">Record Label</span>
+                    <span className="info-value">{currentTrack.label || 'N/A'}</span>
+                  </div>
+                  <div className="info-modal-item">
+                    <span className="info-label">Play Count</span>
+                    <span className="info-value">{currentTrack.playCount || 'N/A'}</span>
+                  </div>
+                  <div className="info-modal-item">
+                    <span className="info-label">Stream Quality</span>
+                    <span className="info-value">320 kbps (Super High Quality)</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

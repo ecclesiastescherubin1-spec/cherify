@@ -1885,3 +1885,119 @@ ul {
   transform: scale(1.15);
   opacity: 1 !important;
 }
+
+/* Song Info Modal Backdrop */
+.info-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Song Info Modal Content Card */
+.info-modal-content {
+  width: 90%;
+  max-width: 400px;
+  background: rgba(22, 22, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 255, 255, 0.02);
+  border-radius: 24px;
+  padding: 24px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  animation: scaleUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.info-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.info-modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  text-shadow: 0 0 10px var(--accent-glow);
+}
+
+.info-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-subdued);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.info-modal-close:hover {
+  color: white;
+  transform: scale(1.15) rotate(90deg);
+}
+
+.info-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.info-modal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.info-modal-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.info-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-subdued);
+  letter-spacing: 0.8px;
+}
+
+.info-value {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: white;
+  text-align: right;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
