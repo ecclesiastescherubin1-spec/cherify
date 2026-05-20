@@ -59,45 +59,6 @@ export const PlayerProvider = ({ children }) => {
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     }
-
-    // 2. Define global callbacks
-    window.onYouTubeIframeAPIReady = () => {
-      window.ytPlayer = new window.YT.Player('yt-player-iframe', {
-        height: '100%',
-        width: '100%',
-        videoId: '',
-        playerVars: {
-          autoplay: 0,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          origin: window.location.origin
-        },
-        events: {
-          onStateChange: (event) => {
-            if (event.data === window.YT.PlayerState.ENDED) {
-              if (typeof window.playNextTrack === 'function') {
-                window.playNextTrack();
-              }
-            } else if (event.data === window.YT.PlayerState.PLAYING) {
-              if (window.ytPlayer?.getDuration) {
-                window.setTrackDuration(window.ytPlayer.getDuration());
-              }
-              if (typeof window.setPlayerIsPlaying === 'function') {
-                window.setPlayerIsPlaying(true);
-              }
-            } else if (event.data === window.YT.PlayerState.PAUSED) {
-              if (typeof window.setPlayerIsPlaying === 'function') {
-                window.setPlayerIsPlaying(false);
-              }
-            }
-          }
-        }
-      });
-    };
   }, []);
 
   const initAudioContext = () => {
