@@ -46,6 +46,43 @@ export const PlayerProvider = ({ children }) => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const audioRef = useRef(new Audio());
+  const audioContextRef = useRef(null);
+  const sourceRef = useRef(null);
+  const lowpassFilterRef = useRef(null);
+
+  useEffect(() => {
+    audioRef.current.crossOrigin = 'anonymous';
+  }, []);
+
+  const initAudioContext = () => {
+    if (!audioContextRef.current) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      try {
+        // Request 8kHz; browsers may clamp this, so we enforce bandwidth via filter
+        audioContextRef.current = new AudioContextClass({ sampleRate: 8000 });
+        const ctx = audioContextRef.current;
+
+        // Lowpass filter at 4000 Hz — Nyquist limit for 8kHz audio.
+        // This is what actually creates the immersive 8kHz lo-fi effect
+        // regardless of what sample rate the browser ultimately uses.
+        const lowpass = ctx.createBiquadFilter();
+        lowpass.type = 'lowpass';
+        lowpass.frequency.value = 4000; // 8000 / 2 = 4000 Hz
+        lowpass.Q.value = 0.7071; // Butterworth — maximally flat passband
+        lowpassFilterRef.current = lowpass;
+
+        sourceRef.current = ctx.createMediaElementSource(audioRef.current);
+        // Route: source → 8kHz lowpass → output
+        sourceRef.current.connect(lowpass);
+        lowpass.connect(ctx.destination);
+      } catch (err) {
+        console.error('AudioContext error:', err);
+      }
+    }
+    if (audioContextRef.current?.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
+  };
 
   // 1. Firebase Auth Listener
   useEffect(() => {
@@ -134,6 +171,7 @@ export const PlayerProvider = ({ children }) => {
 
   const playTrack = async (track, trackList = null) => {
     if (!track) return;
+    initAudioContext();
     setIsLoading(true);
     try {
       let streamUrl = track.streamUrl;
@@ -184,6 +222,7 @@ export const PlayerProvider = ({ children }) => {
 
   const togglePlay = () => {
     if (!currentTrack) return;
+    initAudioContext();
     isPlaying ? audioRef.current.pause() : audioRef.current.play();
     setIsPlaying(!isPlaying);
   };

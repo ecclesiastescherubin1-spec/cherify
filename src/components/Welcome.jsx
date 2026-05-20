@@ -4,10 +4,13 @@ import { Music, Mail, Lock, User, ArrowRight, Check, ShieldCheck, ArrowLeft } fr
 
 const Welcome = () => {
   const { setShowWelcome, setPreferredArtists, preferredArtists, login, register, updateUserProfile, user, loginAnonymously, resetPassword } = useContext(PlayerContext);
-  const [stage, setStage] = useState('intro'); // 'intro', 'auth', 'artists', 'forgot', 'reset-success'
+  const [stage, setStage] = useState('intro'); // 'intro', 'auth', 'artists', 'forgot', 'reset-success', 'otp', 'new-password'
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -78,12 +81,87 @@ const Welcome = () => {
     setIsLoading(true);
     setError('');
     try {
-      await resetPassword(email);
-      setStage('reset-success');
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, action: 'send' }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        // If no API key is set, the function returns a mock OTP for testing
+        if (data.mock) {
+          console.log("MOCK OTP (Set RESEND_API_KEY for real email):", data.mock);
+          alert(`DEMO MODE: OTP sent to ${email}. Check console for code or use: ${data.mock}`);
+        }
+        setStage('otp');
+      } else {
+        throw new Error(data.error || "Failed to send OTP");
+      }
     } catch (err) {
       setError(err.message);
     }
     setIsLoading(false);
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    const enteredOtp = otp.join('');
+    try {
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, action: 'verify', enteredOtp }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setStage('new-password');
+      } else {
+        throw new Error(data.error || "Invalid OTP");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+    setIsLoading(false);
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, action: 'reset', newPassword }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert("Password updated successfully! You can now sign in.");
+        setStage('auth');
+        setIsLogin(true);
+      } else {
+        throw new Error(data.error || "Failed to update password");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+    setIsLoading(false);
+  };
+
+  const handleOtpChange = (index, value) => {
+    if (isNaN(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.substring(value.length - 1);
+    setOtp(newOtp);
+    // Auto-focus next
+    if (value && index < 5) {
+      document.getElementById(`otp-${index + 1}`).focus();
+    }
   };
 
   const toggleArtist = (artist) => {
@@ -181,21 +259,76 @@ const Welcome = () => {
           </div>
         )}
 
-        {stage === 'reset-success' && (
+        {stage === 'otp' && (
           <div className="auth-card-perfect text-center">
-            <div className="success-icon-large">
-              <Check size={48} />
-            </div>
-            <h2>Check Email</h2>
-            <p className="success-description">
-              A secure reset link has been sent to <strong>{email}</strong>. 
-              Follow the instructions to set your new password.
-            </p>
-            <button className="btn-main full-width" onClick={() => setStage('auth')}>
-              Back to Sign In
+            <button className="back-btn-simple" onClick={() => setStage('forgot')}>
+              <ArrowLeft size={20} />
             </button>
+            <div className="auth-card-header">
+              <h2>Verify OTP</h2>
+              <p>Enter the 6-digit code sent to <strong>{email}</strong></p>
+            </div>
+            <form onSubmit={handleVerifyOtp} className="auth-form-perfect">
+              <div className="otp-container">
+                {otp.map((digit, i) => (
+                  <input
+                    key={i}
+                    id={`otp-${i}`}
+                    type="text"
+                    maxLength="1"
+                    value={digit}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    className="otp-input"
+                    autoFocus={i === 0}
+                  />
+                ))}
+              </div>
+              <button type="submit" className="btn-main full-width" disabled={isLoading}>
+                {isLoading ? 'Verifying...' : 'Verify Code'} <ShieldCheck size={20} />
+              </button>
+            </form>
+            <button className="resend-link" onClick={handleResetPassword} style={{ marginTop: '20px' }}>
+              Didn't get the code? Resend
+            </button>
+            {error && <div className="auth-error-simple">{error}</div>}
           </div>
         )}
+
+        {stage === 'new-password' && (
+          <div className="auth-card-perfect">
+            <div className="auth-card-header">
+              <h2>Set New Password</h2>
+              <p>Your identity is verified. Please provide a new password.</p>
+            </div>
+            <form onSubmit={handleUpdatePassword} className="auth-form-perfect">
+              <div className="input-field-perfect">
+                <Lock size={20} />
+                <input 
+                  type="password" 
+                  placeholder="New Password" 
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)} 
+                  required 
+                />
+              </div>
+              <div className="input-field-perfect">
+                <Lock size={20} />
+                <input 
+                  type="password" 
+                  placeholder="Confirm New Password" 
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)} 
+                  required 
+                />
+              </div>
+              <button type="submit" className="btn-main full-width" disabled={isLoading}>
+                {isLoading ? 'Updating...' : 'Reset Password'} <ShieldCheck size={20} />
+              </button>
+            </form>
+            {error && <div className="auth-error-simple">{error}</div>}
+          </div>
+        )}
+
 
 
         {stage === 'artists' && (
@@ -302,6 +435,17 @@ const Welcome = () => {
           margin-bottom: 24px; cursor: pointer; transition: color 0.3s;
         }
         .back-btn-simple:hover { color: white; }
+
+        .otp-container { display: flex; justify-content: space-between; gap: 8px; margin: 24px 0; }
+        .otp-input {
+          width: 50px; height: 60px; background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+          text-align: center; font-size: 24px; font-weight: 800; color: white;
+          outline: none; transition: all 0.3s ease;
+        }
+        .otp-input:focus { border-color: #6366f1; background: rgba(255,255,255,0.1); transform: translateY(-4px); }
+        .resend-link { background: none; border: none; color: rgba(255,255,255,0.4); margin-top: 20px; cursor: pointer; font-size: 14px; }
+        .resend-link:hover { color: white; text-decoration: underline; }
 
         @keyframes floatUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }

@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
-import { Mail, Lock, User, Music, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, Music, ShieldCheck, ArrowLeft, Check, RotateCcw } from 'lucide-react';
 
 const AuthView = () => {
   const { login, register, resetPassword } = useContext(PlayerContext);
@@ -8,9 +8,14 @@ const AuthView = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isEmailSent, setIsEmailSent] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
     try {
       if (mode === 'login') {
         await login(email, password);
@@ -18,17 +23,60 @@ const AuthView = () => {
         await register(email, password, name);
       } else if (mode === 'forgot') {
         await resetPassword(email);
-        setMode('login');
+        setIsEmailSent(true);
       }
     } catch (err) {
-      alert(err.message);
+      setError(err.message);
     }
+    setIsLoading(false);
   };
+
+  if (isEmailSent) {
+    return (
+      <div className="auth-view-perfect-container">
+        <div className="auth-floating-card">
+          <div className="auth-card-inner text-center">
+            <div className="success-icon-container">
+              <Check size={48} color="#10b981" />
+            </div>
+            <h2 className="success-title">Check Your Email</h2>
+            <p className="success-text">
+              We've sent a secure reset link to <strong>{email}</strong>.<br/>
+              Follow the link to verify your identity and set a new password.
+            </p>
+            <div className="auth-hint-v2">
+              <p>The new password will be automatically updated in Firebase for future access.</p>
+            </div>
+            <button className="auth-submit-v2" onClick={() => { setIsEmailSent(false); setMode('login'); }}>
+              Back to Login
+            </button>
+          </div>
+        </div>
+        <style dangerouslySetInnerHTML={{__html: `
+          .text-center { text-align: center; }
+          .success-icon-container { 
+            width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            margin: 0 auto 24px; border: 2px solid rgba(16, 185, 129, 0.2);
+          }
+          .success-title { font-family: 'Syne', sans-serif; font-size: 32px; color: white; margin-bottom: 16px; }
+          .success-text { color: rgba(255, 255, 255, 0.6); line-height: 1.6; margin-bottom: 32px; }
+          .auth-hint-v2 { background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: 16px; margin-bottom: 32px; font-size: 13px; color: rgba(255, 255, 255, 0.4); }
+        `}} />
+      </div>
+    );
+  }
 
   return (
     <div className="auth-view-perfect-container">
       <div className="auth-floating-card">
         <div className="auth-card-inner">
+          {mode !== 'login' && (
+            <button className="back-btn-v2" onClick={() => setMode('login')}>
+              <ArrowLeft size={18} /> Back
+            </button>
+          )}
+          
           <div className="auth-logo-section">
             <div className="logo-circle">
               <Music size={32} color="white" />
@@ -41,7 +89,7 @@ const AuthView = () => {
             <p>
               {mode === 'login' ? 'Sign in to continue your high-fidelity journey.' : 
                mode === 'signup' ? 'Experience the next generation of personalized streaming.' :
-               'We will send a secure reset link to your registered email.'}
+               'We will send a secure reset link to verify your identity.'}
             </p>
           </div>
 
@@ -69,13 +117,16 @@ const AuthView = () => {
               </button>
             )}
             
-            <button type="submit" className="auth-submit-v2">
-              {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'} <ShieldCheck size={20} />
+            {error && <div className="auth-error-v2">{error}</div>}
+
+            <button type="submit" className="auth-submit-v2" disabled={isLoading}>
+              {isLoading ? 'Processing...' : (mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link')} 
+              {!isLoading && <ShieldCheck size={20} />}
             </button>
           </form>
 
           <div className="auth-footer-v2">
-            <p>{mode === 'login' ? "New to the platform?" : "Back to security?"}</p>
+            <p>{mode === 'login' ? "New to the platform?" : mode === 'signup' ? "Already have an account?" : "Remembered your password?"}</p>
             <button onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
               {mode === 'login' ? 'Sign up for free' : 'Sign in here'}
             </button>
@@ -92,9 +143,17 @@ const AuthView = () => {
           width: 100%; max-width: 500px; background: rgba(255, 255, 255, 0.03);
           backdrop-filter: blur(40px); border-radius: 48px; border: 1px solid rgba(255, 255, 255, 0.08);
           box-shadow: 0 40px 100px rgba(0,0,0,0.6); animation: cardFloat 0.8s ease-out;
+          position: relative; overflow: hidden;
         }
         .auth-card-inner { padding: 56px; }
         
+        .back-btn-v2 {
+          position: absolute; top: 32px; left: 32px; background: none; border: none;
+          color: rgba(255, 255, 255, 0.4); display: flex; align-items: center; gap: 8px;
+          cursor: pointer; font-weight: 600; font-size: 14px; transition: color 0.3s;
+        }
+        .back-btn-v2:hover { color: white; }
+
         .auth-logo-section { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 48px; }
         .logo-circle { width: 64px; height: 64px; background: linear-gradient(135deg, #6366f1, #ec4899); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.4); }
         .logo-text { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: white; letter-spacing: 4px; }
@@ -114,13 +173,16 @@ const AuthView = () => {
         .auth-input-v2 svg { color: rgba(255, 255, 255, 0.3); transition: color 0.3s; }
         .auth-input-v2:focus-within svg { color: #6366f1; }
 
+        .auth-error-v2 { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 12px 20px; border-radius: 12px; font-size: 13px; text-align: center; border: 1px solid rgba(239, 68, 68, 0.2); }
+
         .auth-submit-v2 {
           margin-top: 12px; background: white; color: black; font-weight: 800; font-size: 18px;
           padding: 20px; border-radius: 24px; display: flex; align-items: center; justify-content: center;
           gap: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.2); border: none; width: 100%;
         }
-        .auth-submit-v2:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 40px rgba(255,255,255,0.2); }
+        .auth-submit-v2:hover:not(:disabled) { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 40px rgba(255,255,255,0.2); }
+        .auth-submit-v2:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .auth-footer-v2 { margin-top: 40px; text-align: center; }
         .auth-footer-v2 p { color: rgba(255, 255, 255, 0.4); font-size: 14px; margin-bottom: 8px; }
