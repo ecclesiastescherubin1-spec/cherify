@@ -48,7 +48,6 @@ export const PlayerProvider = ({ children }) => {
   const audioRef = useRef(new Audio());
   const audioContextRef = useRef(null);
   const sourceRef = useRef(null);
-  const lowpassFilterRef = useRef(null);
 
   useEffect(() => {
     audioRef.current.crossOrigin = 'anonymous';
@@ -58,23 +57,9 @@ export const PlayerProvider = ({ children }) => {
     if (!audioContextRef.current) {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       try {
-        // Request 8kHz; browsers may clamp this, so we enforce bandwidth via filter
-        audioContextRef.current = new AudioContextClass({ sampleRate: 8000 });
-        const ctx = audioContextRef.current;
-
-        // Lowpass filter at 4000 Hz — Nyquist limit for 8kHz audio.
-        // This is what actually creates the immersive 8kHz lo-fi effect
-        // regardless of what sample rate the browser ultimately uses.
-        const lowpass = ctx.createBiquadFilter();
-        lowpass.type = 'lowpass';
-        lowpass.frequency.value = 4000; // 8000 / 2 = 4000 Hz
-        lowpass.Q.value = 0.7071; // Butterworth — maximally flat passband
-        lowpassFilterRef.current = lowpass;
-
-        sourceRef.current = ctx.createMediaElementSource(audioRef.current);
-        // Route: source → 8kHz lowpass → output
-        sourceRef.current.connect(lowpass);
-        lowpass.connect(ctx.destination);
+        audioContextRef.current = new AudioContextClass();
+        sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
+        sourceRef.current.connect(audioContextRef.current.destination);
       } catch (err) {
         console.error('AudioContext error:', err);
       }

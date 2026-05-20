@@ -99,11 +99,6 @@ const PlaybackBar = () => {
       </div>
 
       <div className="volume-controls">
-        {currentTrack && (
-          <div className={`audio-quality-badge ${isPlaying ? 'badge-active' : ''}`} title="8kHz Immersive Audio">
-            <span>8K</span>
-          </div>
-        )}
         <button className={`player-btn ${activeView === 'queue' ? 'active' : ''}`} onClick={() => setActiveView('queue')}>
           <ListMusic size={16} color={activeView === 'queue' ? 'var(--text-bright-accent)' : 'currentColor'} />
         </button>
