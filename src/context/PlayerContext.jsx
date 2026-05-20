@@ -253,6 +253,28 @@ export const PlayerProvider = ({ children }) => {
     await updateDoc(userDocRef, { playlists: arrayUnion(newPlaylist) });
   };
 
+  const deletePlaylist = async (playlistId) => {
+    if (!user) return;
+    const userDocRef = doc(db, 'users', user.id);
+    const updatedPlaylists = userPlaylists.filter(p => p.id !== playlistId);
+    await updateDoc(userDocRef, { playlists: updatedPlaylists });
+    if (activeView === `playlist-${playlistId}`) {
+      setActiveView('home');
+    }
+  };
+
+  const renamePlaylist = async (playlistId, newName) => {
+    if (!user) return;
+    const userDocRef = doc(db, 'users', user.id);
+    const updatedPlaylists = userPlaylists.map(p => {
+      if (p.id === playlistId) {
+        return { ...p, name: newName };
+      }
+      return p;
+    });
+    await updateDoc(userDocRef, { playlists: updatedPlaylists });
+  };
+
   const toggleAlbumSelection = async (album) => {
     if (!user) return;
     const userDocRef = doc(db, 'users', user.id);
@@ -354,7 +376,7 @@ export const PlayerProvider = ({ children }) => {
       queue, isLoading, likedSongs, toggleLike, activeView, setActiveView,
       showWelcome, setShowWelcome, user, register: registerUser, login: loginUser, logout: logoutUser,
       loginAnonymously, isAuthLoading,
-      userPlaylists, createPlaylist, preferredArtists, setPreferredArtists,
+      userPlaylists, createPlaylist, deletePlaylist, renamePlaylist, preferredArtists, setPreferredArtists,
       userAlbums, toggleAlbumSelection,
       selectedArtists, toggleArtistSelection,
       toggleFullscreen: () => {

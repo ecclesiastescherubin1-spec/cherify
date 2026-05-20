@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useContext } from 'react';
-import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus, Check, Minus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus, Check, Minus, Edit, Trash2 } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 import { searchMusic, fetchTopSongs, fetchFeaturedPlaylists } from '../services/musicService';
 import AuthView from './AuthView';
@@ -541,16 +541,79 @@ const SongList = ({ songs, onPlay }) => {
 };
 
 const PlaylistDetail = ({ id }) => {
-  const { userPlaylists, playTrack } = useContext(PlayerContext);
+  const { userPlaylists, playTrack, deletePlaylist, renamePlaylist } = useContext(PlayerContext);
   const playlist = (Array.isArray(userPlaylists) ? userPlaylists : []).find(p => p.id === id);
+  
   if (!playlist) return <div className="empty-state">Playlist not found</div>;
+
+  const handleRename = () => {
+    const newName = prompt("Rename playlist to:", playlist.name);
+    if (newName && newName.trim()) {
+      renamePlaylist(playlist.id, newName.trim());
+    }
+  };
+
+  const handleDelete = () => {
+    if (confirm(`Are you sure you want to delete the playlist "${playlist.name}"?`)) {
+      deletePlaylist(playlist.id);
+    }
+  };
+
   return (
     <section>
       <div className="playlist-header-mini">
         <img src={playlist.image} alt="" />
-        <div>
+        <div style={{ flex: 1 }}>
           <span className="type">Playlist</span>
-          <h2>{playlist.name}</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '8px' }}>
+            <h2 style={{ margin: 0 }}>{playlist.name}</h2>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                onClick={handleRename} 
+                title="Rename Playlist"
+                style={{ 
+                  background: 'rgba(255,255,255,0.1)', 
+                  border: 'none', 
+                  color: 'white', 
+                  padding: '6px 12px', 
+                  borderRadius: '20px', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+              >
+                <Edit size={14} /> Rename
+              </button>
+              <button 
+                onClick={handleDelete} 
+                title="Delete Playlist"
+                style={{ 
+                  background: 'rgba(255,99,71,0.2)', 
+                  border: 'none', 
+                  color: '#ff6b6b', 
+                  padding: '6px 12px', 
+                  borderRadius: '20px', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,99,71,0.3)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,99,71,0.2)'}
+              >
+                <Trash2 size={14} /> Delete
+              </button>
+            </div>
+          </div>
           <span className="count">{playlist.songs?.length || 0} songs</span>
         </div>
       </div>
