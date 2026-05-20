@@ -48,18 +48,18 @@ const Welcome = () => {
   };
 
   const globalArtists = [
-    { id: '1', name: 'The Weeknd', lang: 'English', img: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=400&h=400&fit=crop' },
-    { id: '2', name: 'Taylor Swift', lang: 'English', img: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&h=400&fit=crop' },
-    { id: '3', name: 'Drake', lang: 'English', img: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f924?w=400&h=400&fit=crop' },
-    { id: '4', name: 'Dua Lipa', lang: 'English', img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=400&fit=crop' },
-    { id: '5', name: 'Anirudh', lang: 'Tamil', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop' },
-    { id: '6', name: 'A.R. Rahman', lang: 'Tamil', img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=400&fit=crop' },
-    { id: '7', name: 'Sid Sriram', lang: 'Tamil', img: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400&h=400&fit=crop' },
-    { id: '9', name: 'Diljit Dosanjh', lang: 'Punjabi', img: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400&h=400&fit=crop' },
-    { id: '10', name: 'Arijit Singh', lang: 'Hindi', img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=400&fit=crop' },
-    { id: '12', name: 'Bad Bunny', lang: 'Spanish', img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=400&fit=crop' },
-    { id: '15', name: 'BTS', lang: 'Korean', img: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400&h=400&fit=crop' },
-    { id: '16', name: 'BLACKPINK', lang: 'Korean', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop' }
+    { id: '615155', name: 'The Weeknd', lang: 'English', img: 'https://c.saavncdn.com/artists/The_Weeknd_002_20241003071400_500x500.jpg' },
+    { id: '565990', name: 'Taylor Swift', lang: 'English', img: 'https://c.saavncdn.com/artists/Taylor_Swift_003_20200226074119_500x500.jpg' },
+    { id: '512453', name: 'Drake', lang: 'English', img: 'https://c.saavncdn.com/artists/Drake_005_20220704120432_500x500.jpg' },
+    { id: '1274170', name: 'Dua Lipa', lang: 'English', img: 'https://c.saavncdn.com/artists/Dua_Lipa_004_20231120090922_500x500.jpg' },
+    { id: '455663', name: 'Anirudh', lang: 'Tamil', img: 'https://c.saavncdn.com/artists/Anirudh_Ravichander_003_20260121134149_500x500.jpg' },
+    { id: '456269', name: 'A.R. Rahman', lang: 'Tamil', img: 'https://c.saavncdn.com/artists/AR_Rahman_002_20210120084455_500x500.jpg' },
+    { id: '689580', name: 'Sid Sriram', lang: 'Tamil', img: 'https://c.saavncdn.com/artists/Sid_Sriram_005_20240425180600_500x500.jpg' },
+    { id: '468245', name: 'Diljit Dosanjh', lang: 'Punjabi', img: 'https://c.saavncdn.com/artists/Diljit_Dosanjh_005_20231025073054_500x500.jpg' },
+    { id: '459320', name: 'Arijit Singh', lang: 'Hindi', img: 'https://c.saavncdn.com/artists/Arijit_Singh_004_20241118063717_500x500.jpg' },
+    { id: '2029479', name: 'Bad Bunny', lang: 'Spanish', img: 'https://c.saavncdn.com/artists/Bad_Bunny_001_20250207055513_500x500.jpg' },
+    { id: '3315420', name: 'BTS', lang: 'Korean', img: 'https://c.saavncdn.com/artists/BTS_005_20260406070015_500x500.jpg' },
+    { id: '2518190', name: 'BLACKPINK', lang: 'Korean', img: 'https://c.saavncdn.com/artists/BlackPink_005_20260319191032_500x500.jpg' }
   ];
 
   const handleAuthSubmit = async (e) => {
