@@ -3,9 +3,9 @@ import { PlayerContext } from '../context/PlayerContext';
 import { MoreHorizontal, Maximize2, Share2, CheckCircle2 } from 'lucide-react';
 
 const RightSidebar = () => {
-  const { currentTrack, toggleFullscreen, toggleArtistSelection, selectedArtists } = useContext(PlayerContext);
+  const { currentTrack, toggleFullscreen, likedSongs, toggleLike } = useContext(PlayerContext);
 
-  const isArtistFollowed = currentTrack && selectedArtists?.some(a => a.name === currentTrack.artist);
+  const isSongLiked = currentTrack && likedSongs?.some(s => s.id === currentTrack.id);
 
   const handleShare = () => {
     navigator.clipboard.writeText(`Listening to ${currentTrack.title} by ${currentTrack.artist} on Cherify!`);
@@ -47,9 +47,9 @@ const RightSidebar = () => {
               <Share2 size={20} className="rs-icon" onClick={handleShare} />
               <CheckCircle2 
                 size={20} 
-                className={isArtistFollowed ? "rs-icon-check active" : "rs-icon-check"} 
-                onClick={() => toggleArtistSelection({ name: currentTrack.artist, img: currentTrack.coverUrl })}
-                fill={isArtistFollowed ? 'var(--accent-primary)' : 'none'}
+                className={isSongLiked ? "rs-icon-check active" : "rs-icon-check"} 
+                onClick={() => toggleLike(currentTrack)}
+                fill={isSongLiked ? 'var(--accent-primary)' : 'none'}
               />
             </div>
           </div>
