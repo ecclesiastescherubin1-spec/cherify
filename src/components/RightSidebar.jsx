@@ -112,8 +112,14 @@ const RightSidebar = () => {
   const isSongLiked = currentTrack && likedSongs?.some(s => s.id === currentTrack.id);
 
   const handleShare = () => {
-    navigator.clipboard.writeText(`Listening to ${currentTrack.title} by ${currentTrack.artist} on Cherify!`);
-    alert("Share link copied to clipboard!");
+    let shareUrl = '';
+    if (currentTrack.type === 'youtube') {
+      shareUrl = `${window.location.origin}/?yt=${currentTrack.youtubeId}&title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.artist)}&cover=${encodeURIComponent(currentTrack.coverUrl)}&duration=${currentTrack.duration}`;
+    } else {
+      shareUrl = `${window.location.origin}/?track=${currentTrack.id}`;
+    }
+    navigator.clipboard.writeText(shareUrl);
+    alert("Redirectable share link copied to clipboard!");
   };
 
   const handleMore = () => {
@@ -148,7 +154,6 @@ const RightSidebar = () => {
               <p className="rs-artist">{currentTrack.artist}</p>
             </div>
             <div className="rs-status-icons">
-              <Info size={19} className="rs-icon" onClick={() => setShowInfoModal(true)} title="Song Info" />
               <Share2 size={19} className="rs-icon" onClick={handleShare} />
               <CheckCircle2 
                 size={19} 

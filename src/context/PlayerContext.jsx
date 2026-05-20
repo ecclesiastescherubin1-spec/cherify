@@ -324,6 +324,53 @@ export const PlayerProvider = ({ children }) => {
     setIsLoading(false);
   };
 
+  // Handle direct shared song redirection parameters on load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const trackId = params.get('track');
+    const ytId = params.get('yt');
+
+    const loadSharedTrack = async () => {
+      if (trackId) {
+        setShowWelcome(false);
+        setIsLoading(true);
+        try {
+          const res = await fetch(`/api/song-details?id=${trackId}`);
+          const song = await res.json();
+          if (song && !song.error) {
+            playTrack(song);
+          }
+        } catch (e) {
+          console.error("Failed to load shared track:", e);
+        }
+        setIsLoading(false);
+      } else if (ytId) {
+        setShowWelcome(false);
+        const title = params.get('title') || 'Shared YouTube Track';
+        const artist = params.get('artist') || 'Unknown Artist';
+        const cover = params.get('cover') || 'https://images.unsplash.com/photo-1621360841013-c76831f1628f?w=100&h=100&fit=crop';
+        const duration = parseInt(params.get('duration') || '0');
+
+        const ytTrack = {
+          id: `yt-${ytId}`,
+          youtubeId: ytId,
+          title: decodeURIComponent(title),
+          artist: decodeURIComponent(artist),
+          album: 'YouTube Music',
+          coverUrl: decodeURIComponent(cover),
+          duration: duration,
+          type: 'youtube'
+        };
+        playTrack(ytTrack);
+      }
+    };
+
+    loadSharedTrack();
+    if (trackId || ytId) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     window.playNextTrack = () => {

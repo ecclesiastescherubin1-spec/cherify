@@ -156,6 +156,20 @@ export default async function handler(req, res) {
       return res.end(JSON.stringify(songs.map(formatSong)));
     }
 
+    if (pathname.includes('/api/song-details')) {
+      const id = searchParams.get('id');
+      try {
+        const details = await m.Song.getById({ songIds: [id] });
+        const songs = details?.songs || [];
+        if (songs.length > 0) {
+          return res.end(JSON.stringify(formatSong(songs[0])));
+        }
+      } catch (err) {
+        console.error("Fetch details error:", err);
+      }
+      return res.end(JSON.stringify({ error: 'Song details not found' }));
+    }
+
     if (pathname.includes('/api/stream')) {
       const encUrl = searchParams.get('url');
       const streams = await m.Song.experimental.fetchStreamUrls(encUrl, 'node', true);
