@@ -102,109 +102,7 @@ export const PlayerProvider = ({ children }) => {
     return () => clearInterval(intervalId);
   }, [sleepTimer, volume, currentTrack]);
 
-  // Toggle Mute Helper
-  const toggleMute = () => {
-    if (volume > 0) {
-      setPreMuteVolume(volume);
-      setVolume(0);
-      if (currentTrack?.type === 'youtube') {
-        if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
-          window.ytPlayer.setVolume(0);
-        }
-      } else {
-        audioRef.current.volume = 0;
-      }
-    } else {
-      const targetVol = preMuteVolume || 0.5;
-      setVolume(targetVol);
-      if (currentTrack?.type === 'youtube') {
-        if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
-          window.ytPlayer.setVolume(targetVol * 100);
-        }
-      } else {
-        audioRef.current.volume = targetVol;
-      }
-    }
-  };
 
-  // Keyboard Shortcuts Keydown Listener
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Bypasses triggers if active element is typing-focused
-      const activeEl = document.activeElement;
-      if (
-        activeEl &&
-        (activeEl.tagName === 'INPUT' ||
-          activeEl.tagName === 'TEXTAREA' ||
-          activeEl.isContentEditable)
-      ) {
-        return;
-      }
-
-      switch (e.key) {
-        case ' ':
-          e.preventDefault();
-          togglePlay();
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          seek(Math.min(duration, progress + 10));
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          seek(Math.max(0, progress - 10));
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setVolume(v => {
-            const nextVol = Math.min(1, parseFloat((v + 0.05).toFixed(2)));
-            if (currentTrack?.type === 'youtube') {
-              if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
-                window.ytPlayer.setVolume(nextVol * 100);
-              }
-            } else {
-              audioRef.current.volume = nextVol;
-            }
-            return nextVol;
-          });
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          setVolume(v => {
-            const nextVol = Math.max(0, parseFloat((v - 0.05).toFixed(2)));
-            if (currentTrack?.type === 'youtube') {
-              if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
-                window.ytPlayer.setVolume(nextVol * 100);
-              }
-            } else {
-              audioRef.current.volume = nextVol;
-            }
-            return nextVol;
-          });
-          break;
-        case 'm':
-        case 'M':
-          toggleMute();
-          break;
-        case 'n':
-        case 'N':
-          playNext();
-          break;
-        case 'p':
-        case 'P':
-          playPrev();
-          break;
-        case '?':
-          setShowShortcutsModal(prev => !prev);
-          break;
-        default:
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, seek, progress, duration, playNext, playPrev, volume, currentTrack]);
 
   useEffect(() => {
     const glowMap = {
@@ -740,6 +638,110 @@ export const PlayerProvider = ({ children }) => {
     const s = Math.floor(t % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
+
+  // Toggle Mute Helper
+  const toggleMute = () => {
+    if (volume > 0) {
+      setPreMuteVolume(volume);
+      setVolume(0);
+      if (currentTrack?.type === 'youtube') {
+        if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+          window.ytPlayer.setVolume(0);
+        }
+      } else {
+        audioRef.current.volume = 0;
+      }
+    } else {
+      const targetVol = preMuteVolume || 0.5;
+      setVolume(targetVol);
+      if (currentTrack?.type === 'youtube') {
+        if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+          window.ytPlayer.setVolume(targetVol * 100);
+        }
+      } else {
+        audioRef.current.volume = targetVol;
+      }
+    }
+  };
+
+  // Keyboard Shortcuts Keydown Listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Bypasses triggers if active element is typing-focused
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.isContentEditable)
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case ' ':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          seek(Math.min(duration, progress + 10));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          seek(Math.max(0, progress - 10));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setVolume(v => {
+            const nextVol = Math.min(1, parseFloat((v + 0.05).toFixed(2)));
+            if (currentTrack?.type === 'youtube') {
+              if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+                window.ytPlayer.setVolume(nextVol * 100);
+              }
+            } else {
+              audioRef.current.volume = nextVol;
+            }
+            return nextVol;
+          });
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setVolume(v => {
+            const nextVol = Math.max(0, parseFloat((v - 0.05).toFixed(2)));
+            if (currentTrack?.type === 'youtube') {
+              if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+                window.ytPlayer.setVolume(nextVol * 100);
+              }
+            } else {
+              audioRef.current.volume = nextVol;
+            }
+            return nextVol;
+          });
+          break;
+        case 'm':
+        case 'M':
+          toggleMute();
+          break;
+        case 'n':
+        case 'N':
+          playNext();
+          break;
+        case 'p':
+        case 'P':
+          playPrev();
+          break;
+        case '?':
+          setShowShortcutsModal(prev => !prev);
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay, seek, progress, duration, playNext, playPrev, volume, currentTrack, preMuteVolume]);
 
   return (
     <PlayerContext.Provider value={{
