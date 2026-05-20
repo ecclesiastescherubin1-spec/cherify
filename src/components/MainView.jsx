@@ -259,32 +259,31 @@ const MainView = () => {
             </>
           ) : (
             <>
-              {searchHistory.length > 0 && (
-                <div style={{ marginBottom: '32px' }}>
-                  <h2 className="section-title">Recent Searches</h2>
-                  <div className="cards-grid">
-                    {searchHistory.map(item => (
-                      <Card 
-                        key={`hist-${item.id}`} 
-                        title={item.title || item.name} 
-                        desc={item.artist || 'Artist'} 
-                        img={item.coverUrl || item.img} 
-                        isLiked={likedSongs.some(s => s.id === item.id)} 
-                        isArtist={item.type === 'artist'}
-                        onPlay={() => {
-                          if (item.type === 'song' || (!item.type && item.artist)) handlePlay(item, searchHistory);
-                          else if (item.type === 'artist') setActiveView(`artist-${item.id}`);
-                          else setActiveView(`album-${item.id}`);
-                        }} 
-                        onLike={() => {
-                          if (item.type === 'song' || (!item.type && item.artist)) toggleLike(item);
-                          else if (item.type === 'artist') toggleArtistSelection(item);
-                          else addAlbum({ id: item.id, name: item.title, artist: item.artist, img: item.coverUrl });
-                        }} 
-                        onAdd={() => handleAddToPlaylist(item)}
-                        isPlayingTrack={currentTrack?.id === item.id}
-                        isAlbumMode={item.type === 'album'}
-                      />
+              {history.length > 0 && (
+                <div style={{ marginBottom: '32px', maxWidth: '600px' }}>
+                  <h2 className="section-title">Recently Played Songs</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {history.slice(0, 15).map((item, i) => (
+                      <div 
+                        key={`hist-${item.id}-${i}`} 
+                        className="recent-list-item" 
+                        onClick={() => handlePlay(item, history)} 
+                        style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'background 0.2s' }}
+                      >
+                        <img 
+                          src={item.coverUrl} 
+                          alt="" 
+                          style={{ width: '48px', height: '48px', borderRadius: '4px', objectFit: 'cover' }} 
+                        />
+                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                          <div style={{ color: 'white', fontWeight: '500', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {item.title}
+                          </div>
+                          <div style={{ color: 'var(--text-subdued)', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            Song • {item.artist}
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
