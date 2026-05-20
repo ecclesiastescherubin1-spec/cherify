@@ -28,7 +28,7 @@ const Card = ({ title, desc, img, isArtist, isLiked, onPlay, onLike, onAdd, isPl
         <div className="card-desc">{desc}</div>
       </div>
       <button className="card-like-btn" onClick={(e) => { e.stopPropagation(); onLike(); }}>
-        {isAlbumMode || isArtist ? (
+        {isArtist ? (
           isLiked ? <Minus size={18} color="var(--text-bright-accent)" /> : <Plus size={18} color="var(--text-subdued)" />
         ) : (
           <Heart size={18} fill={isLiked ? 'var(--text-bright-accent)' : 'none'} color={isLiked ? 'var(--text-bright-accent)' : 'var(--text-subdued)'} />
@@ -229,7 +229,6 @@ const MainView = () => {
               <div className="search-tabs">
                 <button className={`search-tab ${searchMode === 'song' ? 'active' : ''}`} onClick={() => setSearchMode('song')}>Songs</button>
                 <button className={`search-tab ${searchMode === 'artist' ? 'active' : ''}`} onClick={() => setSearchMode('artist')}>Artists</button>
-                <button className={`search-tab ${searchMode === 'album' ? 'active' : ''}`} onClick={() => setSearchMode('album')}>Albums</button>
               </div>
               <div className="cards-grid">
                 {searchResults.map(item => (
@@ -241,12 +240,9 @@ const MainView = () => {
                     isLiked={
                       (searchMode === 'artist' || item.type === 'artist') 
                         ? preferredArtists.some(a => a.id === item.id) 
-                        : (searchMode === 'album' || item.type === 'album')
-                          ? userAlbums.some(a => a.id === item.id)
-                          : likedSongs.some(s => s.id === item.id)
+                        : likedSongs.some(s => s.id === item.id)
                     } 
                     isArtist={searchMode === 'artist' || item.type === 'artist'}
-                    isAlbumMode={searchMode === 'album' || item.type === 'album'}
                     onPlay={() => {
                       addToSearchHistory(item);
                       if (searchMode === 'song' || item.type === 'song') handlePlay(item, searchResults);
@@ -254,28 +250,15 @@ const MainView = () => {
                         setCurrentArtistObj(item);
                         setActiveView(`artist-${item.id}`);
                       }
-                      else setActiveView(`album-${item.id}`);
                     }} 
                     onLike={() => {
                       if (searchMode === 'song' || item.type === 'song') toggleLike(item);
                       else if (searchMode === 'artist' || item.type === 'artist') {
-                        // For artists, we toggle via preferredArtists? Actually toggleArtistSelection if available
-                        const isPref = preferredArtists.some(a => a.id === item.id);
-                        if (!isPref) {
-                           // Try to use toggleArtistSelection from context (which handles the selection)
-                           // Wait, toggleArtistSelection might just be for the onboarding. We need a way to add to preferredArtists
-                           // Let's assume we can just do toggleArtistSelection or similar logic. Let's look at PlayerContext.
                            toggleArtistSelection(item);
-                        } else {
-                           toggleArtistSelection(item);
-                        }
-                      } else {
-                        addAlbum({ id: item.id, name: item.title, artist: item.artist, img: item.coverUrl });
                       }
                     }} 
                     onAdd={() => handleAddToPlaylist(item)}
                     isPlayingTrack={currentTrack?.id === item.id}
-                    isAlbumMode={searchMode === 'album' || item.type === 'album'}
                   />
                 ))}
               </div>
@@ -349,35 +332,6 @@ const MainView = () => {
         <div className="cards-grid">
           {(Array.isArray(userPlaylists) ? userPlaylists : []).map(p => (
             <Card key={p.id} title={p.name} desc={`Playlist • ${p.songs?.length || 0} songs`} img={p.image} onPlay={() => setActiveView(`playlist-${p.id}`)} />
-          ))}
-        </div>
-      </section>
-    );
-
-    if (activeView === 'albums') return (
-      <section>
-        <h2 className="section-title">Your Albums</h2>
-        <div className="cards-grid">
-          <div className="card add-card-perfect" onClick={() => setActiveView('search')}>
-            <div className="card-img-container plus-tile">
-              <Plus size={48} color="rgba(255,255,255,0.4)" />
-            </div>
-            <div className="card-info-footer">
-              <div className="card-title">Add Album</div>
-              <div className="card-desc">Find more music</div>
-            </div>
-          </div>
-          {(Array.isArray(userAlbums) ? userAlbums : []).map(a => (
-            <Card 
-              key={a.id} 
-              title={a.name} 
-              desc={a.artist} 
-              img={a.img} 
-              isAlbumMode
-              isLiked={true}
-              onLike={() => toggleAlbumSelection(a)}
-              onPlay={() => setActiveView(`album-${a.id}`)} 
-            />
           ))}
         </div>
       </section>
