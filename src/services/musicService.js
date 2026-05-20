@@ -24,6 +24,16 @@ export const searchMusic = async (query, type = 'song', limit = 20) => {
         type: 'artist'
       }));
     }
+    
+    if (type === 'album') {
+      return data.map(item => ({
+        id: item.id,
+        name: cleanTitle(item.name || item.title),
+        artist: cleanTitle(item.artist),
+        img: item.img,
+        type: 'album'
+      }));
+    }
 
     return data.map(item => ({
       id: item.id,

@@ -62,6 +62,22 @@ export default async function handler(req, res) {
             img: imageUrl
           };
         })));
+      } else if (type === 'album') {
+        const result = await m.Album.search({ query });
+        const albums = (result?.results || result?.data?.results || []).slice(0, 20);
+        return res.end(JSON.stringify(albums.map(a => {
+          let imageUrl = a.images?.[2]?.url || a.images?.[1]?.url || a.images?.[0]?.url || a.image?.[2]?.link || a.image?.[0]?.link || '';
+          imageUrl = imageUrl.replace(/50x50|150x150/g, '500x500');
+          if (!imageUrl || imageUrl.includes('default') || imageUrl.includes('missing')) {
+            imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(a.name || a.title || 'Album')}&background=random&size=500`;
+          }
+          return {
+            id: a.id,
+            name: a.name || a.title || 'Unknown Album',
+            artist: a.primaryArtists || a.artist || 'Unknown Artist',
+            img: imageUrl
+          };
+        })));
       } else {
         const result = await m.Song.search({ query });
         const songs = (result?.results || result?.data?.results || []).slice(0, 20);
