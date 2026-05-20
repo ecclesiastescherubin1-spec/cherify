@@ -1,34 +1,13 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
 import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader } from 'lucide-react';
-import { searchMusic } from '../services/musicService';
 
 const RightSidebar = () => {
   const { currentTrack, toggleFullscreen, likedSongs, toggleLike, progress } = useContext(PlayerContext);
-  const [artistImg, setArtistImg] = useState('');
-  const [activeTab, setActiveTab] = useState('artist');
   const [lyrics, setLyrics] = useState('');
   const [syncedLyrics, setSyncedLyrics] = useState('');
   const [parsedLrc, setParsedLrc] = useState([]);
   const [lyricsLoading, setLyricsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!currentTrack?.artist) return;
-    const fetchArtistImage = async () => {
-      try {
-        const results = await searchMusic(currentTrack.artist, 'artist', 1);
-        if (results && results.length > 0) {
-          setArtistImg(results[0].img);
-        } else {
-          setArtistImg(currentTrack.coverUrl);
-        }
-      } catch (err) {
-        console.error("Error fetching artist image:", err);
-        setArtistImg(currentTrack.coverUrl);
-      }
-    };
-    fetchArtistImage();
-  }, [currentTrack?.artist, currentTrack?.coverUrl]);
 
   useEffect(() => {
     setLyrics('');
@@ -37,7 +16,7 @@ const RightSidebar = () => {
   }, [currentTrack?.id]);
 
   useEffect(() => {
-    if (!currentTrack?.id || activeTab !== 'lyrics') return;
+    if (!currentTrack?.id) return;
     const fetchLyrics = async () => {
       setLyricsLoading(true);
       try {
@@ -141,61 +120,34 @@ const RightSidebar = () => {
         </div>
       </div>
 
-      <div className="rs-tabs">
-        <button className={`rs-tab ${activeTab === 'artist' ? 'active' : ''}`} onClick={() => setActiveTab('artist')}>Artist</button>
-        <button className={`rs-tab ${activeTab === 'lyrics' ? 'active' : ''}`} onClick={() => setActiveTab('lyrics')}>Lyrics</button>
+      <div className="rs-lyrics-section">
+        {lyricsLoading ? (
+          <div className="rs-lyrics-loading">
+            <Loader size={20} className="spin-animation" color="var(--accent-primary)" />
+            <span>Fetching lyrics...</span>
+          </div>
+        ) : parsedLrc.length > 0 ? (
+          <div className="rs-synced-lyrics">
+            <div className="rs-lyrics-prev">
+              {activeLineIndex > 0 ? parsedLrc[activeLineIndex - 1].text : (activeLineIndex === 0 ? "• • •" : "")}
+            </div>
+            <div className="rs-lyrics-current">
+              {activeLineIndex >= 0 ? parsedLrc[activeLineIndex].text : "🎵 " + currentTrack.title + " 🎵"}
+            </div>
+            <div className="rs-lyrics-next">
+              {activeLineIndex + 1 < parsedLrc.length ? parsedLrc[activeLineIndex + 1].text : ""}
+            </div>
+          </div>
+        ) : (lyrics && typeof lyrics === 'string') ? (
+          <div className="rs-lyrics-content scrollable">
+            {lyrics.split('\n').map((line, idx) => (
+              <p key={idx} className="rs-lyrics-line">{line}</p>
+            ))}
+          </div>
+        ) : (
+          <div className="rs-lyrics-empty">Lyrics not available for this song</div>
+        )}
       </div>
-
-      {activeTab === 'artist' ? (
-        <div className="rs-about-artist">
-          <div className="rs-artist-card">
-            <img src={artistImg || currentTrack.coverUrl} className="rs-artist-img" alt="" />
-            <div className="rs-artist-overlay">
-              <span className="rs-about-label">About the artist</span>
-              <h3 className="rs-artist-name">{currentTrack.artist}</h3>
-            </div>
-          </div>
-          <div className="rs-artist-stats">
-            <div className="stat-item">
-              <span className="stat-value">24.5M</span>
-              <span className="stat-label">Monthly Listeners</span>
-            </div>
-            <p className="rs-artist-bio">
-              Exploring the boundaries of sound with {currentTrack.artist}. 
-              A leading voice in the current high-fidelity music scene.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="rs-lyrics-section">
-          {lyricsLoading ? (
-            <div className="rs-lyrics-loading">
-              <Loader size={20} className="spin-animation" color="var(--accent-primary)" />
-              <span>Fetching lyrics...</span>
-            </div>
-          ) : parsedLrc.length > 0 ? (
-            <div className="rs-synced-lyrics">
-              <div className="rs-lyrics-prev">
-                {activeLineIndex > 0 ? parsedLrc[activeLineIndex - 1].text : (activeLineIndex === 0 ? "• • •" : "")}
-              </div>
-              <div className="rs-lyrics-current">
-                {activeLineIndex >= 0 ? parsedLrc[activeLineIndex].text : "🎵 " + currentTrack.title + " 🎵"}
-              </div>
-              <div className="rs-lyrics-next">
-                {activeLineIndex + 1 < parsedLrc.length ? parsedLrc[activeLineIndex + 1].text : ""}
-              </div>
-            </div>
-          ) : (lyrics && typeof lyrics === 'string') ? (
-            <div className="rs-lyrics-content scrollable">
-              {lyrics.split('\n').map((line, idx) => (
-                <p key={idx} className="rs-lyrics-line">{line}</p>
-              ))}
-            </div>
-          ) : (
-            <div className="rs-lyrics-empty">Lyrics not available for this song</div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
