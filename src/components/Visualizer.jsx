@@ -96,33 +96,64 @@ const Visualizer = () => {
           ctx.stroke();
         }
       } else {
-        // Fallback / Idle State (Simulated kinetic wave)
-        const activeWaveFactor = isPlaying ? 1.0 : 0.15; // smooth flatline when paused
+        // Fallback / Idle State (Simulated kinetic visualizer responsive to play state)
+        const activeWaveFactor = isPlaying ? 1.0 : 0.15; // flatline look when paused
         simPhase += isPlaying ? 0.05 : 0.005;
 
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.lineWidth = 2.5;
+        if (style === 'bars') {
+          // Draw simulated organic bouncing spectrum bars
+          const barWidth = 5;
+          const gap = 3;
+          const barCount = Math.floor(w / (barWidth + gap));
+          const time = Date.now() * 0.004;
 
-        // Custom multi-sine wave overlay for a luxurious, alive look
-        for (let x = 0; x < w; x++) {
-          const y = h / 2 + 
-            Math.sin(x * 0.02 + simPhase) * 15 * activeWaveFactor +
-            Math.sin(x * 0.01 - simPhase * 0.7) * 8 * activeWaveFactor;
+          for (let i = 0; i < barCount; i++) {
+            // Generate nice wave-like bounce using multiple sines and phase shifts
+            let bounce = Math.sin(i * 0.22 + time) * Math.cos(i * 0.08 - time * 0.7);
+            bounce = Math.abs(bounce);
+            
+            // Add high frequency jitter to mimic real audio analysis
+            bounce = (bounce * 0.7 + Math.sin(i * 0.95 + time * 3.5) * 0.18 + 0.12) * activeWaveFactor;
+            
+            // Limit peak height
+            const barHeight = Math.max(2, bounce * h * 0.75);
+            const x = i * (barWidth + gap);
+
+            // Draw glowing bar with premium neon purple/indigo gradient
+            const gradient = ctx.createLinearGradient(x, h, x, h - barHeight);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)'); // Indigo
+            gradient.addColorStop(1, 'rgba(139, 92, 246, 0.85)'); // Purple
+
+            ctx.fillStyle = gradient;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
+            ctx.fillRect(x, h - barHeight, barWidth, barHeight);
+          }
+        } else {
+          // Draw simulated active multi-sine waveform
+          ctx.beginPath();
+          ctx.lineWidth = 2.5;
+
+          for (let x = 0; x < w; x++) {
+            const y = h / 2 + 
+              Math.sin(x * 0.025 + simPhase) * 16 * activeWaveFactor +
+              Math.sin(x * 0.055 - simPhase * 1.3) * 7 * activeWaveFactor +
+              Math.sin(x * 0.012 + simPhase * 0.5) * 3 * activeWaveFactor;
+            
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+
+          const gradient = ctx.createLinearGradient(0, 0, w, 0);
+          gradient.addColorStop(0, '#818cf8'); // Indigo
+          gradient.addColorStop(0.5, '#ec4899'); // Pink
+          gradient.addColorStop(1, '#a855f7'); // Violet
           
-          if (x === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          ctx.strokeStyle = gradient;
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = 'rgba(236, 72, 153, 0.45)';
+          ctx.stroke();
         }
-
-        const gradient = ctx.createLinearGradient(0, 0, w, 0);
-        gradient.addColorStop(0, '#818cf8'); // Indigo
-        gradient.addColorStop(0.5, '#ec4899'); // Pink
-        gradient.addColorStop(1, '#a855f7'); // Violet
-        
-        ctx.strokeStyle = gradient;
-        ctx.shadowBlur = 18;
-        ctx.shadowColor = 'rgba(236, 72, 153, 0.45)';
-        ctx.stroke();
       }
 
       // Reset shadows
