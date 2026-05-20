@@ -108,7 +108,7 @@ export default async function handler(req, res) {
         const match = html.match(/ytInitialData\s*=\s*({.+?});/);
         if (match) {
           const json = JSON.parse(match[1]);
-          const contents = json.contents?.twoColumnSearchResultRenderer?.primaryContents?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || [];
+          const contents = json.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || [];
           const videos = [];
           for (const item of contents) {
             if (item.videoRenderer) {
