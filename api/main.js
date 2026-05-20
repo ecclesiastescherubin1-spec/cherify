@@ -1,5 +1,21 @@
 import https from 'https';
 
+const httpsGetHtml = (url) => new Promise((resolve, reject) => {
+  const get = (url) => {
+    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.9' } }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return get(res.headers.location);
+      }
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        resolve(data);
+      });
+    }).on('error', reject);
+  };
+  get(url);
+});
+
 const httpsGet = (url) => new Promise((resolve, reject) => {
   const get = (url) => {
     https.get(url, (res) => {
@@ -83,6 +99,51 @@ export default async function handler(req, res) {
         const songs = (result?.results || result?.data?.results || []).slice(0, 20);
         return res.end(JSON.stringify(songs.map(formatSong)));
       }
+    }
+
+    if (pathname.includes('/api/youtube-search')) {
+      const query = searchParams.get('q');
+      try {
+        const html = await httpsGetHtml(`https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' audio')}&sp=EgIQAQ%253D%253D`);
+        const match = html.match(/ytInitialData\s*=\s*({.+?});/);
+        if (match) {
+          const json = JSON.parse(match[1]);
+          const contents = json.contents?.twoColumnSearchResultRenderer?.primaryContents?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || [];
+          const videos = [];
+          for (const item of contents) {
+            if (item.videoRenderer) {
+              const vr = item.videoRenderer;
+              const videoId = vr.videoId;
+              if (!videoId) continue;
+              const title = vr.title?.runs?.[0]?.text || '';
+              // Filter out obvious noise or non-songs if needed, but let's keep it simple
+              const artist = vr.ownerText?.runs?.[0]?.text || '';
+              let coverUrl = vr.thumbnail?.thumbnails?.[vr.thumbnail.thumbnails.length - 1]?.url || '';
+              if (coverUrl.startsWith('//')) coverUrl = 'https:' + coverUrl;
+              const durationStr = vr.lengthText?.simpleText || '0:00';
+              const parts = durationStr.split(':').map(Number);
+              let duration = 0;
+              if (parts.length === 2) duration = parts[0] * 60 + parts[1];
+              else if (parts.length === 3) duration = parts[0] * 3600 + parts[1] * 60 + parts[2];
+              
+              videos.push({
+                id: `yt-${videoId}`,
+                youtubeId: videoId,
+                title,
+                artist,
+                album: 'YouTube Music',
+                coverUrl,
+                duration,
+                type: 'youtube'
+              });
+            }
+          }
+          return res.end(JSON.stringify(videos.slice(0, 15)));
+        }
+      } catch (err) {
+        console.error("YouTube search error:", err);
+      }
+      return res.end(JSON.stringify([]));
     }
 
     if (pathname.includes('/api/trending')) {

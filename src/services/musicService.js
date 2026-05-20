@@ -92,3 +92,14 @@ export const fetchFeaturedPlaylists = async () => {
     image: `https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&h=500&fit=crop`
   }));
 };
+
+export const searchYouTube = async (query) => {
+  try {
+    const response = await fetch(`/api/youtube-search?q=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error("YouTube search fetch failed:", err);
+    return [];
+  }
+};

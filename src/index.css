@@ -1519,3 +1519,74 @@ ul {
   color: black;
   border-color: white;
 }
+
+/* Option 1: Search Disclaimer Banner */
+.search-disclaimer-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(129, 140, 248, 0.05);
+  border: 1px solid rgba(129, 140, 248, 0.15);
+  border-radius: 16px;
+  padding: 12px 18px;
+  margin-bottom: 28px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13.5px;
+  line-height: 1.4;
+  backdrop-filter: blur(10px);
+}
+
+.disclaimer-icon {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.search-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 24px 0 16px 0;
+  letter-spacing: -0.01em;
+}
+
+.search-empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-subdued);
+  font-size: 15px;
+}
+
+/* Option 2: Floating YouTube Video Player */
+.yt-floating-player {
+  position: fixed;
+  bottom: 106px;
+  right: 24px;
+  width: 240px;
+  height: 135px;
+  background: black;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(20px) scale(0.92);
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.4s;
+}
+
+.yt-floating-player.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.yt-floating-player iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}

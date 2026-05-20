@@ -9,19 +9,11 @@ import Welcome from './components/Welcome';
 import AuthView from './components/AuthView';
 
 const AppContent = () => {
-  const { showWelcome, user } = React.useContext(PlayerContext);
+  const { showWelcome, currentTrack } = React.useContext(PlayerContext);
   
   if (showWelcome) return <Welcome />;
 
-  /* 
-  if (!user) {
-    return (
-      <div className="full-page-auth">
-        <AuthView />
-      </div>
-    );
-  }
-  */
+  const isYoutubePlaying = currentTrack?.type === 'youtube';
 
   return (
     <div className="app-container">
@@ -30,6 +22,11 @@ const AppContent = () => {
       <RightSidebar />
       <MobileNav />
       <PlaybackBar />
+      
+      {/* Floating YouTube Player Container */}
+      <div className={`yt-floating-player ${isYoutubePlaying ? 'visible' : ''}`}>
+        <div id="yt-player-iframe"></div>
+      </div>
     </div>
   );
 };

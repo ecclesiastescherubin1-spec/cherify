@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useContext } from 'react';
-import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus, Check, Minus, Edit, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus, Check, Minus, Edit, Trash2, Info } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
-import { searchMusic, fetchTopSongs, fetchFeaturedPlaylists } from '../services/musicService';
+import { searchMusic, fetchTopSongs, fetchFeaturedPlaylists, searchYouTube } from '../services/musicService';
 import AuthView from './AuthView';
 import ProfileView from './ProfileView';
 
@@ -53,6 +53,7 @@ const MainView = () => {
   const [topSongs, setTopSongs] = useState([]);
   const [playlists, setPlaylists] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [youtubeResults, setYoutubeResults] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchMode, setSearchMode] = useState('song');
   const [isSearching, setIsSearching] = useState(false);
@@ -108,12 +109,29 @@ const MainView = () => {
       if (searchQuery.trim().length > 0) {
         setIsSearching(true);
         setIsLoading(true);
-        const results = await searchMusic(searchQuery, searchMode, 20);
-        setSearchResults(Array.isArray(results) ? results : []);
+        if (searchMode === 'song') {
+          try {
+            const [saavnRes, ytRes] = await Promise.all([
+              searchMusic(searchQuery, 'song', 20),
+              searchYouTube(searchQuery)
+            ]);
+            setSearchResults(Array.isArray(saavnRes) ? saavnRes : []);
+            setYoutubeResults(Array.isArray(ytRes) ? ytRes : []);
+          } catch (err) {
+            console.error("Search failed:", err);
+            setSearchResults([]);
+            setYoutubeResults([]);
+          }
+        } else {
+          const results = await searchMusic(searchQuery, searchMode, 20);
+          setSearchResults(Array.isArray(results) ? results : []);
+          setYoutubeResults([]);
+        }
         setIsLoading(false);
       } else {
         setIsSearching(false);
         setSearchResults([]);
+        setYoutubeResults([]);
       }
     }, 500);
     return () => clearTimeout(delayDebounceFn);
@@ -225,43 +243,94 @@ const MainView = () => {
         <section>
           {isSearching ? (
             <>
-              <h2 className="section-title">Top Results</h2>
+              {/* Option 1: Premium Info disclaimer banner */}
+              <div className="search-disclaimer-banner">
+                <Info size={16} className="disclaimer-icon" />
+                <span>Cherify searches regional hits from JioSaavn and global hits from YouTube.</span>
+              </div>
+
               <div className="search-tabs">
                 <button className={`search-tab ${searchMode === 'song' ? 'active' : ''}`} onClick={() => setSearchMode('song')}>Songs</button>
                 <button className={`search-tab ${searchMode === 'artist' ? 'active' : ''}`} onClick={() => setSearchMode('artist')}>Artists</button>
               </div>
-              <div className="cards-grid">
-                {searchResults.map(item => (
-                  <Card 
-                    key={item.id} 
-                    title={item.title || item.name} 
-                    desc={item.artist} 
-                    img={item.coverUrl || item.img} 
-                    isLiked={
-                      (searchMode === 'artist' || item.type === 'artist') 
-                        ? preferredArtists.some(a => a.id === item.id) 
-                        : likedSongs.some(s => s.id === item.id)
-                    } 
-                    isArtist={searchMode === 'artist' || item.type === 'artist'}
-                    onPlay={() => {
-                      addToSearchHistory(item);
-                      if (searchMode === 'song' || item.type === 'song') handlePlay(item, searchResults);
-                      else if (searchMode === 'artist' || item.type === 'artist') {
+
+              {searchMode === 'song' && searchResults.length > 0 && (
+                <>
+                  <h2 className="section-title search-section-title">Regional Tracks</h2>
+                  <div className="cards-grid">
+                    {searchResults.map(item => (
+                      <Card 
+                        key={item.id} 
+                        title={item.title || item.name} 
+                        desc={item.artist} 
+                        img={item.coverUrl || item.img} 
+                        isLiked={likedSongs.some(s => s.id === item.id)} 
+                        isArtist={false}
+                        onPlay={() => {
+                          addToSearchHistory(item);
+                          handlePlay(item, searchResults);
+                        }} 
+                        onLike={() => toggleLike(item)} 
+                        onAdd={() => handleAddToPlaylist(item)}
+                        isPlayingTrack={currentTrack?.id === item.id}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {searchMode === 'artist' && searchResults.length > 0 && (
+                <div className="cards-grid">
+                  {searchResults.map(item => (
+                    <Card 
+                      key={item.id} 
+                      title={item.name} 
+                      desc="Artist" 
+                      img={item.img} 
+                      isLiked={preferredArtists.some(a => a.id === item.id)} 
+                      isArtist={true}
+                      onPlay={() => {
+                        addToSearchHistory(item);
                         setCurrentArtistObj(item);
                         setActiveView(`artist-${item.id}`);
-                      }
-                    }} 
-                    onLike={() => {
-                      if (searchMode === 'song' || item.type === 'song') toggleLike(item);
-                      else if (searchMode === 'artist' || item.type === 'artist') {
-                           toggleArtistSelection(item);
-                      }
-                    }} 
-                    onAdd={() => handleAddToPlaylist(item)}
-                    isPlayingTrack={currentTrack?.id === item.id}
-                  />
-                ))}
-              </div>
+                      }} 
+                      onLike={() => toggleArtistSelection(item)} 
+                      onAdd={() => {}}
+                      isPlayingTrack={false}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* YouTube Fallback Results */}
+              {searchMode === 'song' && youtubeResults.length > 0 && (
+                <div style={{ marginTop: '40px' }}>
+                  <h2 className="section-title search-section-title">Global Fallback Hits</h2>
+                  <div className="cards-grid">
+                    {youtubeResults.map(item => (
+                      <Card 
+                        key={item.id} 
+                        title={item.title} 
+                        desc={item.artist} 
+                        img={item.coverUrl} 
+                        isLiked={likedSongs.some(s => s.id === item.id)} 
+                        isArtist={false}
+                        onPlay={() => {
+                          addToSearchHistory(item);
+                          handlePlay(item, youtubeResults);
+                        }} 
+                        onLike={() => toggleLike(item)} 
+                        onAdd={() => handleAddToPlaylist(item)}
+                        isPlayingTrack={currentTrack?.id === item.id}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {searchResults.length === 0 && youtubeResults.length === 0 && (
+                <div className="search-empty-state">No tracks found. Try a different search query.</div>
+              )}
             </>
           ) : (
             <>
