@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { Home, Search, Library, Plus, ArrowRight, List, Heart, Clock } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 const Sidebar = () => {
-  const { activeView, setActiveView, userPlaylists, createPlaylist, preferredArtists, likedSongs } = useContext(PlayerContext);
+  const { activeView, setActiveView, userPlaylists, createPlaylist, preferredArtists, likedSongs, userAlbums } = useContext(PlayerContext);
   const [libSearch, setLibSearch] = useState('');
 
   const handleCreatePlaylist = () => {

@@ -48,7 +48,7 @@ const BrowseCard = ({ title, color, img, onClick }) => (
 const MainView = () => {
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef(null);
-  const { playTrack, currentTrack, activeView, setActiveView, likedSongs, toggleLike, preferredArtists, history, userPlaylists, addToPlaylist, selectedArtists, toggleArtistSelection, userAlbums, addAlbum } = useContext(PlayerContext);
+  const { playTrack, currentTrack, activeView, setActiveView, likedSongs, toggleLike, preferredArtists, history, userPlaylists, addToPlaylist, selectedArtists, toggleArtistSelection, userAlbums, toggleAlbumSelection } = useContext(PlayerContext);
   
   const [topSongs, setTopSongs] = useState([]);
   const [playlists, setPlaylists] = useState([]);
