@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useContext } from 'react';
-import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus, Check } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 import { searchMusic, fetchTopSongs, fetchFeaturedPlaylists } from '../services/musicService';
 import AuthView from './AuthView';
@@ -28,8 +28,8 @@ const Card = ({ title, desc, img, isArtist, isLiked, onPlay, onLike, onAdd, isPl
         <div className="card-desc">{desc}</div>
       </div>
       <button className="card-like-btn" onClick={(e) => { e.stopPropagation(); onLike(); }}>
-        {isAlbumMode ? (
-          <Plus size={18} color="var(--text-subdued)" />
+        {isAlbumMode || isArtist ? (
+          isLiked ? <Check size={18} color="var(--text-bright-accent)" /> : <Plus size={18} color="var(--text-subdued)" />
         ) : (
           <Heart size={18} fill={isLiked ? 'var(--text-bright-accent)' : 'none'} color={isLiked ? 'var(--text-bright-accent)' : 'var(--text-subdued)'} />
         )}
@@ -121,25 +121,32 @@ const MainView = () => {
 
   const [artistSongs, setArtistSongs] = useState([]);
   const [currentArtistId, setCurrentArtistId] = useState(null);
+  const [currentArtistObj, setCurrentArtistObj] = useState(null);
 
   useEffect(() => {
     if (activeView.startsWith('artist-')) {
       const artistId = activeView.split('-')[1];
       if (artistId !== currentArtistId) {
-        const artist = (Array.isArray(preferredArtists) ? preferredArtists : []).find(a => a.id === artistId);
+        const artist = (Array.isArray(preferredArtists) ? preferredArtists : []).find(a => a.id === artistId)
+                      || (currentArtistObj?.id === artistId ? currentArtistObj : null)
+                      || searchResults.find(a => a.id === artistId);
+        
         if (artist) {
           const fetchArtistTopHits = async () => {
             setIsLoading(true);
-            const results = await searchMusic(artist.name, 'song', 15);
+            const results = await searchMusic(artist.name, 'song', 20);
             setArtistSongs(results);
             setCurrentArtistId(artistId);
             setIsLoading(false);
           };
           fetchArtistTopHits();
+        } else {
+          setArtistSongs([]);
+          setIsLoading(false);
         }
       }
     }
-  }, [activeView, preferredArtists, currentArtistId]);
+  }, [activeView, preferredArtists, currentArtistId, currentArtistObj, searchResults]);
 
   const handlePlay = (track, trackList) => {
     playTrack(track, trackList);
@@ -188,20 +195,26 @@ const MainView = () => {
     // Artist View
     if (activeView.startsWith('artist-')) {
       const artistId = activeView.split('-')[1];
-      const artist = (Array.isArray(preferredArtists) ? preferredArtists : []).find(a => a.id === artistId);
+      const artist = (Array.isArray(preferredArtists) ? preferredArtists : []).find(a => a.id === artistId)
+                    || (currentArtistObj?.id === artistId ? currentArtistObj : null)
+                    || searchResults.find(a => a.id === artistId);
       
       return (
         <section>
           <div className="artist-banner-perfect">
-            <img src={artist?.img} className="artist-banner-img" alt="" />
+            <img src={artist?.img || artist?.coverUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&h=500&fit=crop'} className="artist-banner-img" alt="" />
             <div className="artist-banner-info">
               <span className="badge">Verified Artist</span>
-              <h1>{artist?.name}</h1>
+              <h1>{artist?.name || artist?.title || 'Unknown Artist'}</h1>
               <div className="stats">24,567,890 monthly listeners</div>
             </div>
           </div>
           <h2 className="section-title">Popular Tracks</h2>
-          <SongList songs={artistSongs} onPlay={(t) => handlePlay(t, artistSongs)} />
+          {artistSongs.length > 0 ? (
+            <SongList songs={artistSongs} onPlay={(t) => handlePlay(t, artistSongs)} />
+          ) : (
+            <div style={{ color: 'var(--text-subdued)', marginTop: '20px' }}>No songs found.</div>
+          )}
         </section>
       );
     }
@@ -225,12 +238,15 @@ const MainView = () => {
                     title={item.title || item.name} 
                     desc={item.artist} 
                     img={item.coverUrl || item.img} 
-                    isLiked={likedSongs.some(s => s.id === item.id)} 
+                    isLiked={searchMode === 'artist' || item.type === 'artist' ? preferredArtists.some(a => a.id === item.id) : likedSongs.some(s => s.id === item.id)} 
                     isArtist={searchMode === 'artist' || item.type === 'artist'}
                     onPlay={() => {
                       addToSearchHistory(item);
                       if (searchMode === 'song' || item.type === 'song') handlePlay(item, searchResults);
-                      else if (searchMode === 'artist' || item.type === 'artist') setActiveView(`artist-${item.id}`);
+                      else if (searchMode === 'artist' || item.type === 'artist') {
+                        setCurrentArtistObj(item);
+                        setActiveView(`artist-${item.id}`);
+                      }
                       else setActiveView(`album-${item.id}`);
                     }} 
                     onLike={() => {

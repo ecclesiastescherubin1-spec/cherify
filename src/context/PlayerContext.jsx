@@ -321,7 +321,6 @@ export const PlayerProvider = ({ children }) => {
         return exists ? prev.filter(a => a.id !== artist.id) : [...prev, artist];
       });
     }
-    setActiveView('home');
   };
 
   const seek = (time) => { audioRef.current.currentTime = time; setProgress(time); };
