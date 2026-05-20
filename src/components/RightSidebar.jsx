@@ -1,9 +1,29 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
 import { MoreHorizontal, Maximize2, Share2, CheckCircle2 } from 'lucide-react';
+import { searchMusic } from '../services/musicService';
 
 const RightSidebar = () => {
   const { currentTrack, toggleFullscreen, likedSongs, toggleLike } = useContext(PlayerContext);
+  const [artistImg, setArtistImg] = useState('');
+
+  useEffect(() => {
+    if (!currentTrack?.artist) return;
+    const fetchArtistImage = async () => {
+      try {
+        const results = await searchMusic(currentTrack.artist, 'artist', 1);
+        if (results && results.length > 0) {
+          setArtistImg(results[0].img);
+        } else {
+          setArtistImg(currentTrack.coverUrl);
+        }
+      } catch (err) {
+        console.error("Error fetching artist image:", err);
+        setArtistImg(currentTrack.coverUrl);
+      }
+    };
+    fetchArtistImage();
+  }, [currentTrack?.artist, currentTrack?.coverUrl]);
 
   const isSongLiked = currentTrack && likedSongs?.some(s => s.id === currentTrack.id);
 
@@ -58,7 +78,7 @@ const RightSidebar = () => {
 
       <div className="rs-about-artist">
         <div className="rs-artist-card">
-          <img src={currentTrack.coverUrl} className="rs-artist-img" alt="" />
+          <img src={artistImg || currentTrack.coverUrl} className="rs-artist-img" alt="" />
           <div className="rs-artist-overlay">
             <span className="rs-about-label">About the artist</span>
             <h3 className="rs-artist-name">{currentTrack.artist}</h3>
