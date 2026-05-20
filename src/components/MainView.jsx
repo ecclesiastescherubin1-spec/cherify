@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useContext } from 'react';
-import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus, Check, Minus } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 import { searchMusic, fetchTopSongs, fetchFeaturedPlaylists } from '../services/musicService';
 import AuthView from './AuthView';
@@ -29,7 +29,7 @@ const Card = ({ title, desc, img, isArtist, isLiked, onPlay, onLike, onAdd, isPl
       </div>
       <button className="card-like-btn" onClick={(e) => { e.stopPropagation(); onLike(); }}>
         {isAlbumMode || isArtist ? (
-          isLiked ? <Check size={18} color="var(--text-bright-accent)" /> : <Plus size={18} color="var(--text-subdued)" />
+          isLiked ? <Minus size={18} color="var(--text-bright-accent)" /> : <Plus size={18} color="var(--text-subdued)" />
         ) : (
           <Heart size={18} fill={isLiked ? 'var(--text-bright-accent)' : 'none'} color={isLiked ? 'var(--text-bright-accent)' : 'var(--text-subdued)'} />
         )}
@@ -381,7 +381,16 @@ const MainView = () => {
             </div>
           </div>
           {(Array.isArray(preferredArtists) ? preferredArtists : []).map(a => (
-            <Card key={a.id} title={a.name} desc="Artist" img={a.img} isArtist onPlay={() => setActiveView(`artist-${a.id}`)} />
+            <Card 
+              key={a.id} 
+              title={a.name} 
+              desc="Artist" 
+              img={a.img} 
+              isArtist 
+              isLiked={true} 
+              onLike={() => toggleArtistSelection(a)}
+              onPlay={() => setActiveView(`artist-${a.id}`)} 
+            />
           ))}
         </div>
       </section>

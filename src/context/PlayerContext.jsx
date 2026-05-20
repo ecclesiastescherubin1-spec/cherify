@@ -312,8 +312,14 @@ export const PlayerProvider = ({ children }) => {
     if (user) {
       const userDocRef = doc(db, 'users', user.id);
       const exists = preferredArtists.find(a => a.id === artist.id);
+      let updatedArtists;
+      if (exists) {
+        updatedArtists = preferredArtists.filter(a => a.id !== artist.id);
+      } else {
+        updatedArtists = [...preferredArtists, { id: artist.id, name: artist.name || artist.title || 'Unknown', img: artist.img || artist.coverUrl || '', type: 'artist' }];
+      }
       await updateDoc(userDocRef, {
-        preferredArtists: exists ? arrayRemove(exists) : arrayUnion(artist)
+        preferredArtists: updatedArtists
       });
     } else {
       setSelectedArtists(prev => {
