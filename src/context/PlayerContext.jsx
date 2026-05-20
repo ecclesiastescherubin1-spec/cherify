@@ -309,8 +309,13 @@ export const PlayerProvider = ({ children }) => {
         const updatedTrack = { ...track, streamUrl };
         setCurrentTrack(updatedTrack);
         audioRef.current.src = streamUrl;
-        audioRef.current.play();
-        setIsPlaying(true);
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (playErr) {
+          console.warn("Autoplay block or playback failed:", playErr);
+          setIsPlaying(false);
+        }
       }
 
       // Save to History in Firestore

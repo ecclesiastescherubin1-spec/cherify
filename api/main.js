@@ -33,6 +33,25 @@ const httpsGet = (url) => new Promise((resolve, reject) => {
   get(url);
 });
 
+const decodeEntities = (str) => {
+  if (!str) return '';
+  let prev;
+  let decoded = str;
+  do {
+    prev = decoded;
+    decoded = decoded
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/&apos;/g, "'")
+      .replace(/&copy;/g, '©')
+      .replace(/&reg;/g, '®');
+  } while (decoded !== prev);
+  return decoded;
+};
+
 const formatSong = (song) => {
   let img = song.images?.[2]?.url || song.images?.[1]?.url || song.images?.[0]?.url || '';
   img = img.replace(/50x50|150x150/g, '500x500');
@@ -41,14 +60,14 @@ const formatSong = (song) => {
   }
   return {
     id: song.id,
-    title: song.name || song.title || 'Unknown',
-    artist: song.artists?.primary?.[0]?.name || 'Unknown Artist',
-    album: song.album?.title || song.album?.name || '',
+    title: decodeEntities(song.name || song.title || 'Unknown'),
+    artist: decodeEntities(song.artists?.primary?.[0]?.name || song.artist || 'Unknown Artist'),
+    album: decodeEntities(song.album?.title || song.album?.name || ''),
     coverUrl: img,
     duration: song.duration || 0,
     encryptedUrl: song.media?.encryptedUrl || '',
     year: song.year || (song.releaseDate ? song.releaseDate.split('-')[0] : '') || 'Unknown Year',
-    label: song.label || song.copyright || 'Unknown Label',
+    label: decodeEntities(song.label || song.copyright || 'Unknown Label'),
     language: song.language || 'Unknown Language',
     playCount: song.playCount || 'N/A'
   };
@@ -133,8 +152,8 @@ export default async function handler(req, res) {
               videos.push({
                 id: `yt-${videoId}`,
                 youtubeId: videoId,
-                title,
-                artist,
+                title: decodeEntities(title),
+                artist: decodeEntities(artist),
                 album: 'YouTube Music',
                 coverUrl,
                 duration,
