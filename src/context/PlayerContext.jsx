@@ -253,10 +253,17 @@ export const PlayerProvider = ({ children }) => {
     await updateDoc(userDocRef, { playlists: arrayUnion(newPlaylist) });
   };
 
-  const addAlbum = async (album) => {
+  const toggleAlbumSelection = async (album) => {
     if (!user) return;
     const userDocRef = doc(db, 'users', user.id);
-    await updateDoc(userDocRef, { albums: arrayUnion(album) });
+    const exists = userAlbums.find(a => a.id === album.id);
+    let updatedAlbums;
+    if (exists) {
+      updatedAlbums = userAlbums.filter(a => a.id !== album.id);
+    } else {
+      updatedAlbums = [...userAlbums, { id: album.id, name: album.name || album.title || 'Unknown Album', img: album.img || album.coverUrl || '', artist: album.artist || 'Unknown Artist', type: 'album' }];
+    }
+    await updateDoc(userDocRef, { albums: updatedAlbums });
   };
 
   const loginUser = (email, password) => {
@@ -345,7 +352,7 @@ export const PlayerProvider = ({ children }) => {
       showWelcome, setShowWelcome, user, register: registerUser, login: loginUser, logout: logoutUser,
       loginAnonymously, isAuthLoading,
       userPlaylists, createPlaylist, preferredArtists, setPreferredArtists,
-      userAlbums, addAlbum,
+      userAlbums, toggleAlbumSelection,
       selectedArtists, toggleArtistSelection,
       toggleFullscreen: () => {
         if (!document.fullscreenElement) document.documentElement.requestFullscreen();
