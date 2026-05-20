@@ -16,6 +16,33 @@ const httpsGetHtml = (url) => new Promise((resolve, reject) => {
   get(url);
 });
 
+const fetchLyricsFromSearch = async (songName, artistName) => {
+  try {
+    const query = `${artistName} ${songName} azlyrics`;
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const searchHtml = await httpsGetHtml(searchUrl);
+    
+    const azMatch = searchHtml.match(/https?:\/\/(?:www\.)?azlyrics\.com\/lyrics\/[a-zA-Z0-9_\/]+\.html/);
+    if (!azMatch) return '';
+    
+    const lyricsUrl = azMatch[0];
+    const lyricsHtml = await httpsGetHtml(lyricsUrl);
+    
+    const lrcMatch = lyricsHtml.match(/<!-- Usage of azlyrics\.com content[\s\S]+?-->([\s\S]+?)<\/div>/);
+    if (lrcMatch) {
+      let content = lrcMatch[1]
+        .replace(/<\/div>/g, '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/?[^>]+(>|$)/g, '')
+        .trim();
+      return content;
+    }
+  } catch (e) {
+    console.error("Automated search lyrics failed:", e);
+  }
+  return '';
+};
+
 const httpsGet = (url) => new Promise((resolve, reject) => {
   const get = (url) => {
     https.get(url, (res) => {
@@ -259,6 +286,12 @@ export default async function handler(req, res) {
         try {
           const lyricsObj = await m.Song.getLyrics(id);
           plainLyrics = lyricsObj?.lyrics || '';
+        } catch (e) {}
+      }
+
+      if (!plainLyrics && songName && artistName) {
+        try {
+          plainLyrics = await fetchLyricsFromSearch(songName, artistName);
         } catch (e) {}
       }
 

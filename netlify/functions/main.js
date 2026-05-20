@@ -17,6 +17,49 @@ const httpsGet = (url) => new Promise((resolve, reject) => {
   get(url);
 });
 
+const httpsGetHtml = (url) => new Promise((resolve, reject) => {
+  const get = (url) => {
+    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.9' } }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return get(res.headers.location);
+      }
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        resolve(data);
+      });
+    }).on('error', reject);
+  };
+  get(url);
+});
+
+const fetchLyricsFromSearch = async (songName, artistName) => {
+  try {
+    const query = `${artistName} ${songName} azlyrics`;
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const searchHtml = await httpsGetHtml(searchUrl);
+    
+    const azMatch = searchHtml.match(/https?:\/\/(?:www\.)?azlyrics\.com\/lyrics\/[a-zA-Z0-9_\/]+\.html/);
+    if (!azMatch) return '';
+    
+    const lyricsUrl = azMatch[0];
+    const lyricsHtml = await httpsGetHtml(lyricsUrl);
+    
+    const lrcMatch = lyricsHtml.match(/<!-- Usage of azlyrics\.com content[\s\S]+?-->([\s\S]+?)<\/div>/);
+    if (lrcMatch) {
+      let content = lrcMatch[1]
+        .replace(/<\/div>/g, '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/?[^>]+(>|$)/g, '')
+        .trim();
+      return content;
+    }
+  } catch (e) {
+    console.error("Automated search lyrics failed:", e);
+  }
+  return '';
+};
+
 const formatSong = (song) => ({
   id: song.id,
   title: song.name || song.title || 'Unknown',
@@ -79,6 +122,12 @@ exports.handler = async (event) => {
             finalLyrics = broadData && broadData[0] ? (broadData[0].lyrics || broadData[0].plainLyrics || '') : '';
           }
         } catch(e) {}
+      }
+
+      if ((!finalLyrics || finalLyrics.length < 10) && songName && artistName) {
+        try {
+          finalLyrics = await fetchLyricsFromSearch(songName, artistName);
+        } catch (e) {}
       }
       return { statusCode: 200, headers, body: JSON.stringify({ lyrics: finalLyrics || '' }) };
     }
