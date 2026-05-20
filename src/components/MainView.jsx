@@ -238,8 +238,15 @@ const MainView = () => {
                     title={item.title || item.name} 
                     desc={item.artist} 
                     img={item.coverUrl || item.img} 
-                    isLiked={searchMode === 'artist' || item.type === 'artist' ? preferredArtists.some(a => a.id === item.id) : likedSongs.some(s => s.id === item.id)} 
+                    isLiked={
+                      (searchMode === 'artist' || item.type === 'artist') 
+                        ? preferredArtists.some(a => a.id === item.id) 
+                        : (searchMode === 'album' || item.type === 'album')
+                          ? userAlbums.some(a => a.id === item.id)
+                          : likedSongs.some(s => s.id === item.id)
+                    } 
                     isArtist={searchMode === 'artist' || item.type === 'artist'}
+                    isAlbumMode={searchMode === 'album' || item.type === 'album'}
                     onPlay={() => {
                       addToSearchHistory(item);
                       if (searchMode === 'song' || item.type === 'song') handlePlay(item, searchResults);
@@ -361,7 +368,16 @@ const MainView = () => {
             </div>
           </div>
           {(Array.isArray(userAlbums) ? userAlbums : []).map(a => (
-            <Card key={a.id} title={a.name} desc={a.artist} img={a.img} onPlay={() => setActiveView(`album-${a.id}`)} />
+            <Card 
+              key={a.id} 
+              title={a.name} 
+              desc={a.artist} 
+              img={a.img} 
+              isAlbumMode
+              isLiked={true}
+              onLike={() => toggleAlbumSelection(a)}
+              onPlay={() => setActiveView(`album-${a.id}`)} 
+            />
           ))}
         </div>
       </section>

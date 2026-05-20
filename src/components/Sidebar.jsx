@@ -12,7 +12,8 @@ const Sidebar = () => {
 
   const filteredLibrary = [
     ...(Array.isArray(userPlaylists) ? userPlaylists.map(p => ({ ...p, type: 'playlist' })) : []),
-    ...(Array.isArray(preferredArtists) ? preferredArtists.map(a => ({ ...a, type: 'artist' })) : [])
+    ...(Array.isArray(preferredArtists) ? preferredArtists.map(a => ({ ...a, type: 'artist' })) : []),
+    ...(Array.isArray(userAlbums) ? userAlbums.map(a => ({ ...a, type: 'album' })) : [])
   ].filter(item => (item.name || '').toLowerCase().includes(libSearch.toLowerCase()));
 
   return (
@@ -79,11 +80,11 @@ const Sidebar = () => {
           </div>
 
           {filteredLibrary.map(item => (
-            <div key={item.id} className="playlist-item-row" onClick={() => item.type === 'playlist' ? setActiveView(`playlist-${item.id}`) : setActiveView(`artist-${item.id}`)}>
+            <div key={item.id} className="playlist-item-row" onClick={() => item.type === 'playlist' ? setActiveView(`playlist-${item.id}`) : item.type === 'artist' ? setActiveView(`artist-${item.id}`) : setActiveView(`album-${item.id}`)}>
               <img src={item.img || item.image} className={`playlist-item-img ${item.type === 'artist' ? 'artist' : ''}`} alt={item.name} />
               <div className="playlist-item-info">
                 <span className="playlist-item-name">{item.name}</span>
-                <span className="playlist-item-desc">{item.type === 'artist' ? 'Artist' : 'Playlist'}</span>
+                <span className="playlist-item-desc">{item.type === 'artist' ? 'Artist' : item.type === 'album' ? 'Album' : 'Playlist'}</span>
               </div>
             </div>
           ))}
