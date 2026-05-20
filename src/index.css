@@ -291,10 +291,13 @@ ul {
 .rs-lyrics-section {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  padding: 20px;
-  overflow-y: visible; /* Let parent scrollbar handle it, or we can make it scrollable */
-  min-height: 150px;
+  border-radius: 24px;
+  padding: 24px;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
 .rs-lyrics-loading {
@@ -305,7 +308,7 @@ ul {
   gap: 12px;
   color: var(--text-subdued);
   font-size: 14px;
-  padding: 40px 0;
+  padding: 60px 0;
 }
 
 .rs-lyrics-content {
@@ -313,15 +316,20 @@ ul {
   line-height: 1.8;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
+  text-align: center;
+  max-height: 350px;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
 .rs-lyrics-line {
-  margin-bottom: 12px;
-  transition: color 0.2s ease;
+  margin-bottom: 14px;
+  transition: all 0.2s ease;
 }
 
 .rs-lyrics-line:hover {
   color: white;
+  transform: scale(1.02);
 }
 
 .rs-lyrics-empty {
@@ -330,8 +338,41 @@ ul {
   justify-content: center;
   color: var(--text-subdued);
   font-size: 14px;
-  padding: 40px 0;
+  padding: 60px 0;
   text-align: center;
+}
+
+/* Synced Lyrics Style */
+.rs-synced-lyrics {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 24px;
+  min-height: 220px;
+}
+
+.rs-lyrics-prev, .rs-lyrics-next {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-subdued);
+  opacity: 0.25;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 20px;
+  max-width: 90%;
+  line-height: 1.5;
+}
+
+.rs-lyrics-current {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-bright-accent);
+  text-shadow: 0 0 20px rgba(129, 140, 248, 0.35);
+  transform: scale(1.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 95%;
+  line-height: 1.4;
 }
 
 .sidebar {

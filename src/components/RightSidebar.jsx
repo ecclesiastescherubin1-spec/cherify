@@ -4,10 +4,12 @@ import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader } from 'lucide-
 import { searchMusic } from '../services/musicService';
 
 const RightSidebar = () => {
-  const { currentTrack, toggleFullscreen, likedSongs, toggleLike } = useContext(PlayerContext);
+  const { currentTrack, toggleFullscreen, likedSongs, toggleLike, progress } = useContext(PlayerContext);
   const [artistImg, setArtistImg] = useState('');
   const [activeTab, setActiveTab] = useState('artist');
   const [lyrics, setLyrics] = useState('');
+  const [syncedLyrics, setSyncedLyrics] = useState('');
+  const [parsedLrc, setParsedLrc] = useState([]);
   const [lyricsLoading, setLyricsLoading] = useState(false);
 
   useEffect(() => {
@@ -30,6 +32,8 @@ const RightSidebar = () => {
 
   useEffect(() => {
     setLyrics('');
+    setSyncedLyrics('');
+    setParsedLrc([]);
   }, [currentTrack?.id]);
 
   useEffect(() => {
@@ -40,15 +44,51 @@ const RightSidebar = () => {
         const response = await fetch(`/api/lyrics?id=${currentTrack.id}&title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.artist)}`);
         const data = await response.json();
         setLyrics(data.lyrics || '');
+        setSyncedLyrics(data.syncedLyrics || '');
       } catch (err) {
         console.error("Error fetching lyrics:", err);
         setLyrics('');
+        setSyncedLyrics('');
       } finally {
         setLyricsLoading(false);
       }
     };
     fetchLyrics();
   }, [currentTrack?.id, activeTab]);
+
+  useEffect(() => {
+    if (!syncedLyrics) {
+      setParsedLrc([]);
+      return;
+    }
+    
+    const lines = syncedLyrics.split('\n');
+    const result = [];
+    const timeRegex = /\[(\d+):(\d+)(?:\.(\d+))?\]/g;
+    
+    for (const line of lines) {
+      const text = line.replace(/\[\d+:\d+(?:\.\d+)?\]/g, '').trim();
+      if (!text) continue;
+      
+      timeRegex.lastIndex = 0;
+      let match;
+      while ((match = timeRegex.exec(line)) !== null) {
+        const minutes = parseInt(match[1], 10);
+        const seconds = parseInt(match[2], 10);
+        const hundredths = match[3] ? parseInt(match[3], 10) : 0;
+        const timeInSeconds = minutes * 60 + seconds + (hundredths / 100);
+        result.push({ time: timeInSeconds, text });
+      }
+    }
+    
+    result.sort((a, b) => a.time - b.time);
+    setParsedLrc(result);
+  }, [syncedLyrics]);
+
+  const activeLineIndex = parsedLrc.findIndex((line, index) => {
+    const nextLine = parsedLrc[index + 1];
+    return progress >= line.time && (!nextLine || progress < nextLine.time);
+  });
 
   const isSongLiked = currentTrack && likedSongs?.some(s => s.id === currentTrack.id);
 
@@ -133,8 +173,20 @@ const RightSidebar = () => {
               <Loader size={20} className="spin-animation" color="var(--accent-primary)" />
               <span>Fetching lyrics...</span>
             </div>
+          ) : parsedLrc.length > 0 ? (
+            <div className="rs-synced-lyrics">
+              <div className="rs-lyrics-prev">
+                {activeLineIndex > 0 ? parsedLrc[activeLineIndex - 1].text : (activeLineIndex === 0 ? "• • •" : "")}
+              </div>
+              <div className="rs-lyrics-current">
+                {activeLineIndex >= 0 ? parsedLrc[activeLineIndex].text : "🎵 " + currentTrack.title + " 🎵"}
+              </div>
+              <div className="rs-lyrics-next">
+                {activeLineIndex + 1 < parsedLrc.length ? parsedLrc[activeLineIndex + 1].text : ""}
+              </div>
+            </div>
           ) : (lyrics && typeof lyrics === 'string') ? (
-            <div className="rs-lyrics-content">
+            <div className="rs-lyrics-content scrollable">
               {lyrics.split('\n').map((line, idx) => (
                 <p key={idx} className="rs-lyrics-line">{line}</p>
               ))}
