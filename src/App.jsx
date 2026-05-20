@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Sidebar from './components/Sidebar';
 import MainView from './components/MainView';
 import PlaybackBar from './components/PlaybackBar';
@@ -6,16 +6,18 @@ import MobileNav from './components/MobileNav';
 import RightSidebar from './components/RightSidebar';
 import { PlayerProvider, PlayerContext } from './context/PlayerContext';
 import Welcome from './components/Welcome';
-import AuthView from './components/AuthView';
 
-const AppContent = () => {
-  const { showWelcome, currentTrack } = React.useContext(PlayerContext);
-  const playerRef = useRef(null);
-  const handleRef = useRef(null);
+// Isolated YoutubePlayer component to prevent React Virtual DOM reconciliation issues
+const YoutubePlayer = () => {
+  const containerRef = useRef(null);
 
-  // 1. Dynamic YouTube Player initialization when container is mounted
   useEffect(() => {
-    if (showWelcome) return;
+    // Dynamically create the player element so React doesn't try to reconcile it when state changes
+    const playerDiv = document.createElement('div');
+    playerDiv.id = 'yt-player-iframe';
+    if (containerRef.current) {
+      containerRef.current.appendChild(playerDiv);
+    }
 
     const initYT = () => {
       if (window.YT && window.YT.Player && !window.ytPlayer) {
@@ -66,10 +68,29 @@ const AppContent = () => {
         initYT();
       };
     }
-  }, [showWelcome]);
 
-  // 2. Drag and drop mechanics for the floating player
+    return () => {
+      if (window.ytPlayer && typeof window.ytPlayer.destroy === 'function') {
+        window.ytPlayer.destroy();
+        window.ytPlayer = null;
+      }
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+    };
+  }, []);
+
+  return <div ref={containerRef} className="yt-iframe-wrapper" />;
+};
+
+const AppContent = () => {
+  const { showWelcome, currentTrack } = React.useContext(PlayerContext);
+  const playerRef = useRef(null);
+  const handleRef = useRef(null);
+
+  // Drag and drop mechanics for the floating player
   useEffect(() => {
+    if (showWelcome) return;
     const el = playerRef.current;
     const handle = handleRef.current;
     if (!el || !handle) return;
@@ -79,8 +100,7 @@ const AppContent = () => {
     let startY = 0;
 
     const handleMouseDown = (e) => {
-      // Don't drag on right clicks or multi-clicks
-      if (e.button !== 0) return;
+      if (e.button !== 0) return; // Only left-click
       isDragging = true;
       startX = e.clientX - el.getBoundingClientRect().left;
       startY = e.clientY - el.getBoundingClientRect().top;
@@ -96,7 +116,7 @@ const AppContent = () => {
       let left = e.clientX - startX;
       let top = e.clientY - startY;
 
-      // Restrict within viewport boundaries with 10px padding
+      // Constrain within viewport boundary
       const maxLeft = window.innerWidth - el.offsetWidth - 10;
       const maxTop = window.innerHeight - el.offsetHeight - 10;
 
@@ -145,9 +165,7 @@ const AppContent = () => {
           <div className="yt-drag-dots">⋮⋮</div>
           <span className="yt-drag-title">Floating Player</span>
         </div>
-        <div className="yt-iframe-wrapper">
-          <div id="yt-player-iframe"></div>
-        </div>
+        <YoutubePlayer />
       </div>
     </div>
   );
