@@ -87,6 +87,7 @@ const AppContent = () => {
   const { showWelcome, currentTrack } = React.useContext(PlayerContext);
   const playerRef = useRef(null);
   const handleRef = useRef(null);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   // Drag and drop mechanics for the floating player
   useEffect(() => {
@@ -159,11 +160,21 @@ const AppContent = () => {
       {/* Floating YouTube Player Container */}
       <div 
         ref={playerRef} 
-        className={`yt-floating-player ${isYoutubePlaying ? 'visible' : ''}`}
+        className={`yt-floating-player ${isYoutubePlaying ? 'visible' : ''} ${isMinimized ? 'minimized' : ''}`}
       >
         <div ref={handleRef} className="yt-drag-handle">
           <div className="yt-drag-dots">⋮⋮</div>
           <span className="yt-drag-title">Floating Player</span>
+          <button 
+            className="yt-min-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMinimized(prev => !prev);
+            }}
+            title={isMinimized ? "Expand Player" : "Minimize Player"}
+          >
+            {isMinimized ? '+' : '−'}
+          </button>
         </div>
         <YoutubePlayer />
       </div>

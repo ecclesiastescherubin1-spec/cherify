@@ -48,7 +48,7 @@ const BrowseCard = ({ title, color, img, onClick }) => (
 const MainView = () => {
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef(null);
-  const { playTrack, currentTrack, activeView, setActiveView, likedSongs, toggleLike, preferredArtists, history, userPlaylists, addToPlaylist, selectedArtists, toggleArtistSelection, userAlbums, toggleAlbumSelection } = useContext(PlayerContext);
+  const { playTrack, currentTrack, activeView, setActiveView, likedSongs, toggleLike, preferredArtists, history, userPlaylists, addToPlaylist, selectedArtists, toggleArtistSelection, userAlbums, toggleAlbumSelection, queue, removeFromQueue, clearQueue } = useContext(PlayerContext);
   
   const [topSongs, setTopSongs] = useState([]);
   const [playlists, setPlaylists] = useState([]);
@@ -438,15 +438,89 @@ const MainView = () => {
     if (activeView.startsWith('playlist-')) return <PlaylistDetail id={activeView.split('-')[1]} />;
     if (activeView.startsWith('album-')) return <AlbumDetail id={activeView.split('-')[1]} />;
 
-    if (activeView === 'queue') return (
-      <section>
-        <h2 className="section-title">Queue</h2>
-        <div style={{ marginBottom: '20px', color: 'var(--text-subdued)' }}>Now Playing</div>
-        {currentTrack && <SongList songs={[currentTrack]} onPlay={() => {}} />}
-        <div style={{ marginTop: '40px', marginBottom: '20px', color: 'var(--text-subdued)' }}>Next Up</div>
-        <SongList songs={topSongs.slice(0, 10)} onPlay={(t) => handlePlay(t, topSongs)} />
-      </section>
-    );
+    if (activeView === 'queue') {
+      const activeIdx = queue.findIndex(t => t.id === currentTrack?.id);
+      const nextUp = activeIdx !== -1 ? queue.slice(activeIdx + 1) : queue;
+
+      return (
+        <section className="queue-manager-view">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 className="section-title" style={{ margin: 0 }}>Play Queue</h2>
+            {queue.length > 1 && (
+              <button 
+                className="btn-primary" 
+                style={{ padding: '6px 16px', fontSize: '13px', borderRadius: '20px' }}
+                 onClick={clearQueue}
+              >
+                Clear Queue
+              </button>
+            )}
+          </div>
+
+          <div style={{ marginBottom: '12px', color: 'var(--text-subdued)', fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Now Playing</div>
+          {currentTrack ? (
+            <div className="queue-now-playing-card">
+              <img src={currentTrack.coverUrl} className="queue-now-playing-img" alt={currentTrack.title} />
+              <div className="queue-now-playing-info">
+                <div className="queue-track-title">{currentTrack.title}</div>
+                <div className="queue-track-artist">{currentTrack.artist}</div>
+              </div>
+              <span className="queue-playing-badge">Now Playing</span>
+            </div>
+          ) : (
+            <div className="empty-state" style={{ padding: '20px 0' }}>No track is currently playing.</div>
+          )}
+
+          <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ color: 'var(--text-subdued)', fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Next Up ({nextUp.length} songs)
+            </div>
+          </div>
+
+          {nextUp.length > 0 ? (
+            <div className="queue-list-container">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <tbody>
+                  {nextUp.map((track, i) => (
+                    <tr key={track.id + '-' + i} className="track-row" onClick={() => playTrack(track, queue)}>
+                      <td style={{ padding: '12px 8px', color: 'var(--text-subdued)', width: '40px' }}>
+                        {i + 1}
+                      </td>
+                      <td style={{ padding: '12px 8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <img src={track.coverUrl} style={{ width: '40px', height: '40px', borderRadius: '4px' }} alt="" />
+                          <div>
+                            <div style={{ color: 'white', fontWeight: '500' }}>{track.title}</div>
+                            <div style={{ color: 'var(--text-subdued)', fontSize: '13px' }}>{track.artist}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
+                          <button 
+                            className="queue-remove-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFromQueue(track.id);
+                            }}
+                            title="Remove from queue"
+                            style={{ background: 'none', border: 'none', color: 'var(--text-subdued)', cursor: 'pointer', padding: '6px' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="empty-state" style={{ padding: '30px 0' }}>Queue is empty. Add songs from Search or Playlists!</div>
+          )}
+        </section>
+      );
+    }
 
     // Default Home View
     return (

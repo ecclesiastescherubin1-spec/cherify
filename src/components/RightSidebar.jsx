@@ -1,16 +1,20 @@
-import React, { useContext, useState, useEffect, useMemo } from 'react';
+import React, { useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
-import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader } from 'lucide-react';
+import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader, ListCollapse, AlignCenter } from 'lucide-react';
+import Visualizer from './Visualizer';
 
 const RightSidebar = () => {
-  const { currentTrack, toggleFullscreen, likedSongs, toggleLike, progress } = useContext(PlayerContext);
+  const { currentTrack, toggleFullscreen, likedSongs, toggleLike, progress, seek, formatTime } = useContext(PlayerContext);
   const [lyrics, setLyrics] = useState('');
   const [syncedLyrics, setSyncedLyrics] = useState('');
   const [lyricsLoading, setLyricsLoading] = useState(false);
+  const [showFullLyrics, setShowFullLyrics] = useState(false);
+  const fullLyricsContainerRef = useRef(null);
 
   useEffect(() => {
     setLyrics('');
     setSyncedLyrics('');
+    setShowFullLyrics(false);
   }, [currentTrack?.id]);
 
   useEffect(() => {
@@ -69,6 +73,22 @@ const RightSidebar = () => {
     }
     return index;
   }, [parsedLyrics, progress]);
+
+  // Auto-scroll the full lyrics view to keep the active line in center
+  useEffect(() => {
+    if (showFullLyrics && fullLyricsContainerRef.current && activeIndex !== -1) {
+      const container = fullLyricsContainerRef.current;
+      const activeEl = container.querySelector('.rs-full-lyric-line.active');
+      if (activeEl) {
+        const activeTop = activeEl.offsetTop;
+        const containerHeight = container.clientHeight;
+        container.scrollTo({
+          top: activeTop - containerHeight / 2 + activeEl.clientHeight / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [activeIndex, showFullLyrics]);
 
   const { previousLine, activeLine, nextLine } = useMemo(() => {
     if (parsedLyrics.length === 0) return { previousLine: '', activeLine: '', nextLine: '' };
@@ -139,6 +159,26 @@ const RightSidebar = () => {
         </div>
       </div>
 
+      {/* Modern Live Canvas Audio Visualizer component */}
+      <Visualizer />
+
+      <div className="rs-lyrics-header-panel">
+        <span className="rs-lyrics-panel-title">Lyrics</span>
+        {parsedLyrics.length > 0 && (
+          <button 
+            className="rs-lyrics-toggle-btn"
+            onClick={() => setShowFullLyrics(prev => !prev)}
+            title={showFullLyrics ? "Switch to Karaoke Mode" : "Switch to Full Synced Sheet"}
+          >
+            {showFullLyrics ? (
+              <><AlignCenter size={13} /> Karaoke Mode</>
+            ) : (
+              <><ListCollapse size={13} /> Interactive Sheet</>
+            )}
+          </button>
+        )}
+      </div>
+
       <div className="rs-lyrics-section">
         {lyricsLoading ? (
           <div className="rs-lyrics-loading">
@@ -146,12 +186,31 @@ const RightSidebar = () => {
             <span>Fetching lyrics...</span>
           </div>
         ) : parsedLyrics.length > 0 ? (
-          /* Dynamic Synced Lyrics (Karaoke Mode) */
-          <div className="rs-synced-lyrics-container">
-            <p className="rs-synced-line previous">{previousLine}</p>
-            <p className="rs-synced-line active">{activeLine}</p>
-            <p className="rs-synced-line next">{nextLine}</p>
-          </div>
+          showFullLyrics ? (
+            /* Interactive Full Synced Lyrics Sheet (Click-to-Seek) */
+            <div 
+              ref={fullLyricsContainerRef} 
+              className="rs-full-lyrics-container scrollable"
+            >
+              {parsedLyrics.map((line, idx) => (
+                <div 
+                  key={idx} 
+                  className={`rs-full-lyric-line ${idx === activeIndex ? 'active' : ''}`}
+                  onClick={() => seek(line.time)}
+                >
+                  <span className="rs-lyric-time">{formatTime(line.time)}</span>
+                  <span className="rs-lyric-text">{line.text}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Dynamic Synced Lyrics (Karaoke Mode) */
+            <div className="rs-synced-lyrics-container">
+              <p className="rs-synced-line previous">{previousLine}</p>
+              <p className="rs-synced-line active">{activeLine}</p>
+              <p className="rs-synced-line next">{nextLine}</p>
+            </div>
+          )
         ) : lyrics ? (
           /* Plain Lyrics Fallback */
           <div className="rs-plain-lyrics-container scrollable">

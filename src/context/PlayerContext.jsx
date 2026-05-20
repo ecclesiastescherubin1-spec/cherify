@@ -48,6 +48,7 @@ export const PlayerProvider = ({ children }) => {
   const audioRef = useRef(new Audio());
   const audioContextRef = useRef(null);
   const sourceRef = useRef(null);
+  const analyserRef = useRef(null);
 
   useEffect(() => {
     audioRef.current.crossOrigin = 'anonymous';
@@ -66,8 +67,12 @@ export const PlayerProvider = ({ children }) => {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       try {
         audioContextRef.current = new AudioContextClass();
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 256;
+        
         sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
-        sourceRef.current.connect(audioContextRef.current.destination);
+        sourceRef.current.connect(analyserRef.current);
+        analyserRef.current.connect(audioContextRef.current.destination);
       } catch (err) {
         console.error('AudioContext error:', err);
       }
@@ -188,6 +193,45 @@ export const PlayerProvider = ({ children }) => {
       window.ytPlayer.setVolume(volume * 100);
     }
   }, [volume]);
+
+  const removeFromQueue = (trackId) => {
+    setQueue(prev => {
+      const idx = prev.findIndex(t => t.id === trackId);
+      if (idx === -1) return prev;
+      
+      const newQueue = prev.filter(t => t.id !== trackId);
+      
+      if (idx < currentIndex) {
+        setCurrentIndex(prevIndex => prevIndex - 1);
+      } else if (idx === currentIndex) {
+        if (newQueue.length > 0) {
+          const nextIndex = idx % newQueue.length;
+          setCurrentIndex(nextIndex);
+          setCurrentTrack(newQueue[nextIndex]);
+        } else {
+          setCurrentTrack(null);
+          setCurrentIndex(-1);
+          setIsPlaying(false);
+          if (window.ytPlayer && typeof window.ytPlayer.stopVideo === 'function') {
+            window.ytPlayer.stopVideo();
+          }
+        }
+      }
+      return newQueue;
+    });
+  };
+
+  const clearQueue = () => {
+    setQueue(currentTrack ? [currentTrack] : []);
+    setCurrentIndex(currentTrack ? 0 : -1);
+  };
+
+  const addToQueue = (track) => {
+    setQueue(prev => {
+      if (prev.some(t => t.id === track.id)) return prev;
+      return [...prev, track];
+    });
+  };
 
   const playTrack = async (track, trackList = null) => {
     if (!track) return;
@@ -469,12 +513,13 @@ export const PlayerProvider = ({ children }) => {
     <PlayerContext.Provider value={{
       currentTrack, isPlaying, progress, duration, volume, setVolume,
       playTrack, togglePlay, playNext, playPrev, seek, formatTime,
-      queue, isLoading, likedSongs, toggleLike, activeView, setActiveView,
+      queue, setQueue, removeFromQueue, clearQueue, addToQueue, isLoading, likedSongs, toggleLike, activeView, setActiveView,
       showWelcome, setShowWelcome, user, register: registerUser, login: loginUser, logout: logoutUser,
       loginAnonymously, isAuthLoading,
       userPlaylists, createPlaylist, deletePlaylist, renamePlaylist, preferredArtists, setPreferredArtists,
       userAlbums, toggleAlbumSelection,
       selectedArtists, toggleArtistSelection,
+      analyserRef,
       toggleFullscreen: () => {
         if (!document.fullscreenElement) document.documentElement.requestFullscreen();
         else if (document.exitFullscreen) document.exitFullscreen();
