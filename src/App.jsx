@@ -84,7 +84,7 @@ const YoutubePlayer = () => {
 };
 
 const AppContent = () => {
-  const { showWelcome, currentTrack } = React.useContext(PlayerContext);
+  const { showWelcome, currentTrack, showShortcutsModal, setShowShortcutsModal } = React.useContext(PlayerContext);
   const playerRef = useRef(null);
   const handleRef = useRef(null);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -178,6 +178,116 @@ const AppContent = () => {
         </div>
         <YoutubePlayer />
       </div>
+
+      {showShortcutsModal && (
+        <div 
+          className="shortcuts-modal-overlay"
+          onClick={() => setShowShortcutsModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.82)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+          }}
+        >
+          <div 
+            className="shortcuts-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#0a0a0a',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: '0 0 40px var(--accent-glow)',
+              borderRadius: '20px',
+              padding: '32px',
+              maxWidth: '480px',
+              width: '90%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              position: 'relative'
+            }}
+          >
+            <button 
+              onClick={() => setShowShortcutsModal(false)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.4)',
+                fontSize: '20px',
+                cursor: 'pointer',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+            >
+              ✕
+            </button>
+            
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px', color: 'white' }}>
+              ⌨️ Keyboard Shortcuts
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
+              {[
+                { keys: ['Space'], desc: 'Play / Pause' },
+                { keys: ['ArrowLeft', 'ArrowRight'], desc: 'Seek Backward / Forward 10s' },
+                { keys: ['ArrowUp', 'ArrowDown'], desc: 'Adjust Volume Up / Down 5%' },
+                { keys: ['M'], desc: 'Mute / Unmute Volume' },
+                { keys: ['P', 'N'], desc: 'Previous / Next Track' },
+                { keys: ['?'], desc: 'Toggle Shortcuts Help Modal' }
+              ].map((s, idx) => (
+                <div 
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 0',
+                    borderBottom: '1px solid rgba(255,255,255,0.05)'
+                  }}
+                >
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>{s.desc}</span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {s.keys.map((k, kIdx) => (
+                      <kbd 
+                        key={kIdx}
+                        style={{
+                          background: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          borderRadius: '6px',
+                          padding: '3px 8px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: 'var(--accent-primary)',
+                          boxShadow: '0 2px 0 rgba(0,0,0,0.5)',
+                          textShadow: '0 0 8px var(--accent-glow)',
+                          fontFamily: 'system-ui, sans-serif'
+                        }}
+                      >
+                        {k}
+                      </kbd>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '11px', marginTop: '10px' }}>
+              Press <kbd style={{ color: 'var(--accent-primary)', background: 'none', border: 'none', boxShadow: 'none', padding: 0 }}>?</kbd> anytime to toggle this modal.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

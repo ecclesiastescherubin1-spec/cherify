@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
-import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader, ListCollapse, AlignCenter, Info } from 'lucide-react';
+import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader, ListCollapse, AlignCenter, Info, Download } from 'lucide-react';
 import Visualizer from './Visualizer';
 
 const RightSidebar = () => {
@@ -10,12 +10,37 @@ const RightSidebar = () => {
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const [showFullLyrics, setShowFullLyrics] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [lyricsOffset, setLyricsOffset] = useState(0); // offset in seconds
   const fullLyricsContainerRef = useRef(null);
+
+  const handleDownload = async () => {
+    if (!currentTrack || currentTrack.type === 'youtube') return;
+    setIsDownloading(true);
+    try {
+      const res = await fetch(`/api/download?url=${encodeURIComponent(currentTrack.encryptedUrl)}&title=${encodeURIComponent(currentTrack.title)}`);
+      if (!res.ok) throw new Error("Download request failed");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `${currentTrack.title}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert("Failed to download song stream.");
+    }
+    setIsDownloading(false);
+  };
 
   useEffect(() => {
     setLyrics('');
     setSyncedLyrics('');
     setShowFullLyrics(false);
+    setLyricsOffset(0);
   }, [currentTrack?.id]);
 
   useEffect(() => {
@@ -65,15 +90,16 @@ const RightSidebar = () => {
   const activeIndex = useMemo(() => {
     if (parsedLyrics.length === 0) return -1;
     let index = -1;
+    const adjustedProgress = progress + lyricsOffset;
     for (let i = 0; i < parsedLyrics.length; i++) {
-      if (progress >= parsedLyrics[i].time) {
+      if (adjustedProgress >= parsedLyrics[i].time) {
         index = i;
       } else {
         break;
       }
     }
     return index;
-  }, [parsedLyrics, progress]);
+  }, [parsedLyrics, progress, lyricsOffset]);
 
   // Auto-scroll the full lyrics view to keep the active line in center
   useEffect(() => {
@@ -154,6 +180,17 @@ const RightSidebar = () => {
               <p className="rs-artist">{currentTrack.artist}</p>
             </div>
             <div className="rs-status-icons">
+              {isDownloading ? (
+                <Loader size={19} className="rs-icon spin-animation" />
+              ) : (
+                <Download 
+                  size={19} 
+                  className={currentTrack.type === 'youtube' ? "rs-icon disabled" : "rs-icon"} 
+                  onClick={handleDownload} 
+                  title={currentTrack.type === 'youtube' ? "Downloads only available for Regional JioSaavn tracks" : "Download MP3"} 
+                  style={currentTrack.type === 'youtube' ? { opacity: 0.35, cursor: 'not-allowed' } : {}}
+                />
+              )}
               <Share2 size={19} className="rs-icon" onClick={handleShare} />
               <CheckCircle2 
                 size={19} 
@@ -171,19 +208,34 @@ const RightSidebar = () => {
 
       <div className="rs-lyrics-header-panel">
         <span className="rs-lyrics-panel-title">Lyrics</span>
-        {parsedLyrics.length > 0 && (
-          <button 
-            className="rs-lyrics-toggle-btn"
-            onClick={() => setShowFullLyrics(prev => !prev)}
-            title={showFullLyrics ? "Switch to Karaoke Mode" : "Switch to Full Synced Sheet"}
-          >
-            {showFullLyrics ? (
-              <><AlignCenter size={13} /> Karaoke Mode</>
-            ) : (
-              <><ListCollapse size={13} /> Interactive Sheet</>
-            )}
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {parsedLyrics.length > 0 && (
+            <div className="lyrics-offset-controls" style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '2px 6px', fontSize: '10px' }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', marginRight: '2px' }}>Sync:</span>
+              <button onClick={() => setLyricsOffset(o => o - 0.5)} className="offset-btn" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: '0 4px', fontWeight: 'bold' }} title="Shift 0.5s backward">-0.5s</button>
+              <span style={{ color: lyricsOffset === 0 ? 'rgba(255,255,255,0.5)' : 'var(--accent-primary)', fontWeight: 'bold', minWidth: '32px', textAlign: 'center' }}>
+                {lyricsOffset > 0 ? `+${lyricsOffset.toFixed(1)}s` : `${lyricsOffset.toFixed(1)}s`}
+              </span>
+              <button onClick={() => setLyricsOffset(o => o + 0.5)} className="offset-btn" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: '0 4px', fontWeight: 'bold' }} title="Shift 0.5s forward">+0.5s</button>
+              {lyricsOffset !== 0 && (
+                <button onClick={() => setLyricsOffset(0)} className="offset-btn" style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '0 2px', textDecoration: 'underline' }}>Reset</button>
+              )}
+            </div>
+          )}
+          {parsedLyrics.length > 0 && (
+            <button 
+              className="rs-lyrics-toggle-btn"
+              onClick={() => setShowFullLyrics(prev => !prev)}
+              title={showFullLyrics ? "Switch to Karaoke Mode" : "Switch to Full Synced Sheet"}
+            >
+              {showFullLyrics ? (
+                <><AlignCenter size={13} /> Karaoke Mode</>
+              ) : (
+                <><ListCollapse size={13} /> Interactive Sheet</>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="rs-lyrics-section">

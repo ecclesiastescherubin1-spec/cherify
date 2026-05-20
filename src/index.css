@@ -932,6 +932,14 @@ ul {
   background-color: var(--text-bright-accent);
 }
 
+.sleep-menu-item {
+  transition: all 0.2s ease;
+}
+.sleep-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--accent-primary) !important;
+}
+
 /* Gradient Background for Main View */
 .bg-gradient {
   position: absolute;

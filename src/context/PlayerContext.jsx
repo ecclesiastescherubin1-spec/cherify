@@ -45,6 +45,166 @@ export const PlayerProvider = ({ children }) => {
   const [selectedArtists, setSelectedArtists] = useState([]);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('cherify-accent') || '#818cf8');
+  const [sleepTimer, setSleepTimer] = useState(null);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [preMuteVolume, setPreMuteVolume] = useState(1);
+
+  // Sleep Timer Countdown & Linear Fade-Out Effect
+  useEffect(() => {
+    if (sleepTimer === null) return;
+    if (sleepTimer <= 0) {
+      const fadeOutAndPause = async () => {
+        const originalVolume = volume;
+        const steps = 10;
+        const interval = 300; // total 3 seconds linear fade out
+        for (let i = 1; i <= steps; i++) {
+          const tempVol = originalVolume * (1 - i / steps);
+          setVolume(tempVol);
+          if (currentTrack?.type === 'youtube') {
+            if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+              window.ytPlayer.setVolume(tempVol * 100);
+            }
+          } else {
+            audioRef.current.volume = tempVol;
+          }
+          await new Promise(resolve => setTimeout(resolve, interval));
+        }
+        
+        // Pause track
+        setIsPlaying(false);
+        if (currentTrack?.type === 'youtube') {
+          if (window.ytPlayer && typeof window.ytPlayer.pauseVideo === 'function') {
+            window.ytPlayer.pauseVideo();
+          }
+        } else {
+          audioRef.current.pause();
+        }
+
+        // Reset volume levels back to user's original volume
+        setVolume(originalVolume);
+        if (currentTrack?.type === 'youtube') {
+          if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+            window.ytPlayer.setVolume(originalVolume * 100);
+          }
+        } else {
+          audioRef.current.volume = originalVolume;
+        }
+      };
+      fadeOutAndPause();
+      setSleepTimer(null);
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setSleepTimer(prev => (prev !== null && prev > 0 ? prev - 1 : null));
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [sleepTimer, volume, currentTrack]);
+
+  // Toggle Mute Helper
+  const toggleMute = () => {
+    if (volume > 0) {
+      setPreMuteVolume(volume);
+      setVolume(0);
+      if (currentTrack?.type === 'youtube') {
+        if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+          window.ytPlayer.setVolume(0);
+        }
+      } else {
+        audioRef.current.volume = 0;
+      }
+    } else {
+      const targetVol = preMuteVolume || 0.5;
+      setVolume(targetVol);
+      if (currentTrack?.type === 'youtube') {
+        if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+          window.ytPlayer.setVolume(targetVol * 100);
+        }
+      } else {
+        audioRef.current.volume = targetVol;
+      }
+    }
+  };
+
+  // Keyboard Shortcuts Keydown Listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Bypasses triggers if active element is typing-focused
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.isContentEditable)
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case ' ':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          seek(Math.min(duration, progress + 10));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          seek(Math.max(0, progress - 10));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setVolume(v => {
+            const nextVol = Math.min(1, parseFloat((v + 0.05).toFixed(2)));
+            if (currentTrack?.type === 'youtube') {
+              if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+                window.ytPlayer.setVolume(nextVol * 100);
+              }
+            } else {
+              audioRef.current.volume = nextVol;
+            }
+            return nextVol;
+          });
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setVolume(v => {
+            const nextVol = Math.max(0, parseFloat((v - 0.05).toFixed(2)));
+            if (currentTrack?.type === 'youtube') {
+              if (window.ytPlayer && typeof window.ytPlayer.setVolume === 'function') {
+                window.ytPlayer.setVolume(nextVol * 100);
+              }
+            } else {
+              audioRef.current.volume = nextVol;
+            }
+            return nextVol;
+          });
+          break;
+        case 'm':
+        case 'M':
+          toggleMute();
+          break;
+        case 'n':
+        case 'N':
+          playNext();
+          break;
+        case 'p':
+        case 'P':
+          playPrev();
+          break;
+        case '?':
+          setShowShortcutsModal(prev => !prev);
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay, seek, progress, duration, playNext, playPrev, volume, currentTrack]);
 
   useEffect(() => {
     const glowMap = {
@@ -598,7 +758,10 @@ export const PlayerProvider = ({ children }) => {
       },
       loopMode, toggleLoop: () => setLoopMode(prev => ['none', 'one', 'all'][(['none', 'one', 'all'].indexOf(prev) + 1) % 3]),
       shuffleMode, setShuffleMode, history, addToPlaylist, resetPassword, updateUserProfile,
-      accentColor, changeAccentColor
+      accentColor, changeAccentColor,
+      sleepTimer, setSleepTimer,
+      showShortcutsModal, setShowShortcutsModal,
+      toggleMute
     }}>
       {children}
     </PlayerContext.Provider>

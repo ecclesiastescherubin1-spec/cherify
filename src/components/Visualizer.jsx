@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useContext, useState } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
-import { Flame, Sparkles } from 'lucide-react';
+import { Flame, Sparkles, Disc } from 'lucide-react';
 
 const Visualizer = () => {
   const { currentTrack, isPlaying, analyserRef, accentColor, changeAccentColor } = useContext(PlayerContext);
@@ -81,7 +81,7 @@ const Visualizer = () => {
             ctx.fillRect(x, h - barHeight, barWidth - 2, barHeight);
             x += barWidth;
           }
-        } else {
+        } else if (style === 'wave') {
           // Time domain (waveform) rendering
           analyser.getByteTimeDomainData(dataArray);
 
@@ -108,6 +108,34 @@ const Visualizer = () => {
           }
 
           ctx.lineTo(w, h / 2);
+          ctx.stroke();
+        } else {
+          // Radial pulsing neon beat circle
+          analyser.getByteFrequencyData(dataArray);
+          const cx = w / 2;
+          const cy = h / 2;
+          const baseRadius = Math.min(w, h) * 0.28;
+
+          ctx.beginPath();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = accentColor;
+          ctx.shadowBlur = 16;
+          ctx.shadowColor = hexToRgba(accentColor, 0.75);
+
+          const radialPoints = 90;
+          for (let i = 0; i <= radialPoints; i++) {
+            const idx = i % radialPoints;
+            const angle = (i / radialPoints) * Math.PI * 2;
+            const sampleIdx = Math.floor((idx / radialPoints) * (bufferLength / 3));
+            const val = (dataArray[sampleIdx] || 0) / 255;
+            const r = baseRadius + val * baseRadius * 0.6;
+            
+            const x = cx + Math.cos(angle) * r;
+            const y = cy + Math.sin(angle) * r;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
           ctx.stroke();
         }
       } else {
@@ -144,7 +172,7 @@ const Visualizer = () => {
             ctx.shadowColor = hexToRgba(accentColor, 0.5);
             ctx.fillRect(x, h - barHeight, barWidth, barHeight);
           }
-        } else {
+        } else if (style === 'wave') {
           // Draw simulated active multi-sine waveform
           ctx.beginPath();
           ctx.lineWidth = 2.5;
@@ -167,6 +195,32 @@ const Visualizer = () => {
           ctx.strokeStyle = gradient;
           ctx.shadowBlur = 15;
           ctx.shadowColor = hexToRgba(accentColor, 0.45);
+          ctx.stroke();
+        } else {
+          // Draw simulated active radial pulse ring
+          const cx = w / 2;
+          const cy = h / 2;
+          const baseRadius = Math.min(w, h) * 0.28;
+
+          ctx.beginPath();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = accentColor;
+          ctx.shadowBlur = 16;
+          ctx.shadowColor = hexToRgba(accentColor, 0.75);
+
+          const numPoints = 90;
+          for (let i = 0; i <= numPoints; i++) {
+            const angle = (i / numPoints) * Math.PI * 2;
+            let wobble = Math.sin(angle * 6 + simPhase * 2.5) * Math.cos(angle * 3 - simPhase);
+            wobble = wobble * activeWaveFactor;
+            const r = baseRadius + wobble * baseRadius * 0.25;
+
+            const x = cx + Math.cos(angle) * r;
+            const y = cy + Math.sin(angle) * r;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
           ctx.stroke();
         }
       }
@@ -224,8 +278,22 @@ const Visualizer = () => {
         >
           <Sparkles size={12} /> Waveform
         </button>
+        <button 
+          className={`vis-btn ${style === 'radial' ? 'active' : ''}`}
+          onClick={() => setStyle('radial')}
+          title="Circular Beat Pulse"
+        >
+          <Disc size={12} /> Circle Pulse
+        </button>
       </div>
-      <canvas ref={canvasRef} className="visualizer-canvas" />
+      <canvas 
+        ref={canvasRef} 
+        className="visualizer-canvas" 
+        style={{ 
+          height: style === 'radial' ? '110px' : '65px', 
+          transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
+        }} 
+      />
     </div>
   );
 };

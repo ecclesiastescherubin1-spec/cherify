@@ -33,6 +33,22 @@ const httpsGet = (url) => new Promise((resolve, reject) => {
   get(url);
 });
 
+const httpsGetBuffer = (url) => new Promise((resolve, reject) => {
+  const get = (url) => {
+    https.get(url, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return get(res.headers.location);
+      }
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => {
+        resolve(Buffer.concat(chunks));
+      });
+    }).on('error', reject);
+  };
+  get(url);
+});
+
 const decodeEntities = (str) => {
   if (!str) return '';
   let prev;
@@ -194,6 +210,25 @@ export default async function handler(req, res) {
       const streams = await m.Song.experimental.fetchStreamUrls(encUrl, 'node', true);
       const best = streams.find(s => s.bitrate === '320kbps') || streams[streams.length - 1];
       return res.end(JSON.stringify({ streamUrl: best?.url || '' }));
+    }
+
+    if (pathname.includes('/api/download')) {
+      const encUrl = searchParams.get('url');
+      const title = searchParams.get('title') || 'song';
+      try {
+        const streams = await m.Song.experimental.fetchStreamUrls(encUrl, 'node', true);
+        const best = streams.find(s => s.bitrate === '320kbps') || streams[streams.length - 1];
+        if (best?.url) {
+          const buffer = await httpsGetBuffer(best.url);
+          res.setHeader('Content-Type', 'audio/mpeg');
+          res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(title)}.mp3"`);
+          return res.end(buffer);
+        }
+      } catch (err) {
+        console.error("Backend download error:", err);
+      }
+      res.statusCode = 500;
+      return res.end(JSON.stringify({ error: 'Download failed' }));
     }
 
     if (pathname.includes('/api/lyrics')) {

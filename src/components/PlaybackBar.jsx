@@ -1,5 +1,5 @@
-import { useContext } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Volume2, VolumeX, Mic2, MonitorSpeaker, Heart, Maximize2, ListMusic, Loader } from 'lucide-react';
+import { useContext, useState } from 'react';
+import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Volume2, VolumeX, Mic2, MonitorSpeaker, Heart, Maximize2, ListMusic, Loader, Timer } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 
 const PlaybackBar = () => {
@@ -24,8 +24,13 @@ const PlaybackBar = () => {
     toggleLoop,
     activeView,
     setActiveView,
-    toggleFullscreen
+    toggleFullscreen,
+    sleepTimer,
+    setSleepTimer,
+    toggleMute
   } = useContext(PlayerContext);
+
+  const [showSleepMenu, setShowSleepMenu] = useState(false);
   
   const isCurrentTrackLiked = currentTrack && likedSongs.some(s => s.id === currentTrack.id);
 
@@ -48,10 +53,7 @@ const PlaybackBar = () => {
     setVolume(prev => Math.max(0, Math.min(1, parseFloat((prev + delta).toFixed(2)))));
   };
 
-  const toggleMute = () => {
-    if (volume > 0) setVolume(0);
-    else setVolume(1);
-  };
+
 
   return (
     <div className="playback-bar">
@@ -105,7 +107,87 @@ const PlaybackBar = () => {
         </div>
       </div>
 
-      <div className="volume-controls">
+      <div className="volume-controls" style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <button 
+            className={`player-btn ${sleepTimer !== null ? 'active' : ''}`} 
+            onClick={() => setShowSleepMenu(!showSleepMenu)}
+            title="Set Sleep Timer"
+            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            <Timer size={16} color={sleepTimer !== null ? 'var(--text-bright-accent)' : 'currentColor'} />
+            {sleepTimer !== null && (
+              <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--text-bright-accent)' }}>
+                {Math.floor(sleepTimer / 60)}:{(sleepTimer % 60).toString().padStart(2, '0')}
+              </span>
+            )}
+          </button>
+          
+          {showSleepMenu && (
+            <div 
+              style={{
+                position: 'absolute',
+                bottom: '100%',
+                right: 0,
+                marginBottom: '10px',
+                background: 'rgba(18, 18, 18, 0.95)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                padding: '4px 0',
+                display: 'flex',
+                flexDirection: 'column',
+                minWidth: '100px',
+                zIndex: 100,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.6)'
+              }}
+            >
+              {[5, 15, 30, 60].map(mins => (
+                <button
+                  key={mins}
+                  onClick={() => {
+                    setSleepTimer(mins * 60);
+                    setShowSleepMenu(false);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'rgba(255,255,255,0.85)',
+                    padding: '6px 12px',
+                    textAlign: 'left',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                  }}
+                  className="sleep-menu-item"
+                >
+                  {mins} min
+                </button>
+              ))}
+              {sleepTimer !== null && (
+                <button
+                  onClick={() => {
+                    setSleepTimer(null);
+                    setShowSleepMenu(false);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--accent-primary)',
+                    padding: '6px 12px',
+                    textAlign: 'left',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    borderTop: '1px solid rgba(255,255,255,0.06)'
+                  }}
+                  className="sleep-menu-item"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         <button className={`player-btn ${activeView === 'queue' ? 'active' : ''}`} onClick={() => setActiveView('queue')}>
           <ListMusic size={16} color={activeView === 'queue' ? 'var(--text-bright-accent)' : 'currentColor'} />
         </button>
