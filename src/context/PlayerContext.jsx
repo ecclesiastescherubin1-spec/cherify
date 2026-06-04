@@ -336,7 +336,10 @@ export const PlayerProvider = ({ children }) => {
         return prev;
       }
       showToast(`Added "${track.title}" to queue`, 'success');
-      return [...prev, track];
+      const newQueue = [...prev];
+      const insertIndex = currentIndex + 1;
+      newQueue.splice(insertIndex, 0, track);
+      return newQueue;
     });
   };
 
