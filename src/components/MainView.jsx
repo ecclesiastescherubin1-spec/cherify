@@ -53,7 +53,7 @@ const BrowseCard = ({ title, color, img, onClick }) => (
 const MainView = () => {
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef(null);
-  const { playTrack, currentTrack, activeView, setActiveView, likedSongs, toggleLike, preferredArtists, history, userPlaylists, addToPlaylist, selectedArtists, toggleArtistSelection, userAlbums, toggleAlbumSelection, queue, removeFromQueue, clearQueue } = useContext(PlayerContext);
+  const { playTrack, currentTrack, activeView, setActiveView, likedSongs, toggleLike, preferredArtists, history, userPlaylists, addToPlaylist, selectedArtists, toggleArtistSelection, userAlbums, toggleAlbumSelection, queue, removeFromQueue, clearQueue, addToQueue } = useContext(PlayerContext);
   
   const [topSongs, setTopSongs] = useState([]);
   const [playlists, setPlaylists] = useState([]);
@@ -708,7 +708,7 @@ const UserActions = () => {
 };
 
 const SongList = ({ songs, onPlay }) => {
-  const { likedSongs, toggleLike, currentTrack, isPlaying, userPlaylists, addToPlaylist } = useContext(PlayerContext);
+  const { likedSongs, toggleLike, currentTrack, isPlaying, userPlaylists, addToPlaylist, addToQueue } = useContext(PlayerContext);
   const safeSongs = Array.isArray(songs) ? songs : [];
 
   const handleAdd = (e, track) => {
