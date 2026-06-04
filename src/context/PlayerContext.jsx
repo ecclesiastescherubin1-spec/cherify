@@ -48,6 +48,18 @@ export const PlayerProvider = ({ children }) => {
   const [sleepTimer, setSleepTimer] = useState(null);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [preMuteVolume, setPreMuteVolume] = useState(1);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // Sleep Timer Countdown & Linear Fade-Out Effect
   useEffect(() => {
@@ -286,7 +298,9 @@ export const PlayerProvider = ({ children }) => {
       const idx = prev.findIndex(t => t.id === trackId);
       if (idx === -1) return prev;
       
+      const track = prev[idx];
       const newQueue = prev.filter(t => t.id !== trackId);
+      showToast(`Removed "${track.title}" from queue`, 'info');
       
       if (idx < currentIndex) {
         setCurrentIndex(prevIndex => prevIndex - 1);
@@ -311,11 +325,17 @@ export const PlayerProvider = ({ children }) => {
   const clearQueue = () => {
     setQueue(currentTrack ? [currentTrack] : []);
     setCurrentIndex(currentTrack ? 0 : -1);
+    showToast('Queue cleared', 'info');
   };
 
   const addToQueue = (track) => {
+    if (!track) return;
     setQueue(prev => {
-      if (prev.some(t => t.id === track.id)) return prev;
+      if (prev.some(t => t.id === track.id)) {
+        showToast(`"${track.title}" is already in the queue`, 'info');
+        return prev;
+      }
+      showToast(`Added "${track.title}" to queue`, 'success');
       return [...prev, track];
     });
   };
@@ -803,7 +823,9 @@ export const PlayerProvider = ({ children }) => {
       accentColor, changeAccentColor,
       sleepTimer, setSleepTimer,
       showShortcutsModal, setShowShortcutsModal,
-      toggleMute
+      toggleMute,
+      toast,
+      showToast
     }}>
       {children}
     </PlayerContext.Provider>

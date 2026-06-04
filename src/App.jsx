@@ -91,7 +91,7 @@ const YoutubePlayer = () => {
 };
 
 const AppContent = () => {
-  const { showWelcome, currentTrack, showShortcutsModal, setShowShortcutsModal } = React.useContext(PlayerContext);
+  const { showWelcome, currentTrack, showShortcutsModal, setShowShortcutsModal, toast } = React.useContext(PlayerContext);
   const playerRef = useRef(null);
   const handleRef = useRef(null);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -298,6 +298,11 @@ const AppContent = () => {
               Press <kbd style={{ color: 'var(--accent-primary)', background: 'none', border: 'none', boxShadow: 'none', padding: 0 }}>?</kbd> anytime to toggle this modal.
             </div>
           </div>
+        </div>
+      )}
+      {toast && (
+        <div className={`toast-notification ${toast.type}`}>
+          <span>{toast.message}</span>
         </div>
       )}
     </div>
