@@ -165,8 +165,8 @@ const RightSidebar = () => {
       <div className="rs-header">
         <span className="rs-track-title">{currentTrack.title}</span>
         <div className="rs-header-actions">
-          <MoreHorizontal size={20} className="rs-icon" onClick={handleMore} />
-          <Maximize2 size={18} className="rs-icon" onClick={toggleFullscreen} />
+          <MoreHorizontal size={20} className="rs-icon" onClick={handleMore} role="button" aria-label="More track options" tabIndex={0} onKeyDown={e => e.key === 'Enter' && handleMore()} />
+          <Maximize2 size={18} className="rs-icon" onClick={toggleFullscreen} role="button" aria-label="Toggle fullscreen visualizer" tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleFullscreen()} />
         </div>
       </div>
 
@@ -181,22 +181,40 @@ const RightSidebar = () => {
             </div>
             <div className="rs-status-icons">
               {isDownloading ? (
-                <Loader size={19} className="rs-icon spin-animation" />
+                <Loader size={19} className="rs-icon spin-animation" aria-label="Downloading..." />
               ) : (
-                <Download 
-                  size={19} 
-                  className={currentTrack.type === 'youtube' ? "rs-icon disabled" : "rs-icon"} 
-                  onClick={handleDownload} 
-                  title={currentTrack.type === 'youtube' ? "Downloads only available for Regional JioSaavn tracks" : "Download MP3"} 
+                <Download
+                  size={19}
+                  className={currentTrack.type === 'youtube' ? "rs-icon disabled" : "rs-icon"}
+                  onClick={handleDownload}
+                  title={currentTrack.type === 'youtube' ? "Downloads only available for Regional JioSaavn tracks" : "Download MP3"}
                   style={currentTrack.type === 'youtube' ? { opacity: 0.35, cursor: 'not-allowed' } : {}}
+                  role="button"
+                  aria-label={currentTrack.type === 'youtube' ? 'Download unavailable for YouTube tracks' : 'Download this track as MP3'}
+                  aria-disabled={currentTrack.type === 'youtube'}
+                  tabIndex={currentTrack.type === 'youtube' ? -1 : 0}
+                  onKeyDown={e => e.key === 'Enter' && currentTrack.type !== 'youtube' && handleDownload()}
                 />
               )}
-              <Share2 size={19} className="rs-icon" onClick={handleShare} />
-              <CheckCircle2 
-                size={19} 
-                className={isSongLiked ? "rs-icon-check active" : "rs-icon-check"} 
+              <Share2
+                size={19}
+                className="rs-icon"
+                onClick={handleShare}
+                role="button"
+                aria-label="Copy share link to clipboard"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && handleShare()}
+              />
+              <CheckCircle2
+                size={19}
+                className={isSongLiked ? "rs-icon-check active" : "rs-icon-check"}
                 onClick={() => toggleLike(currentTrack)}
                 fill={isSongLiked ? 'var(--accent-primary)' : 'none'}
+                role="button"
+                aria-label={isSongLiked ? 'Remove from liked songs' : 'Add to liked songs'}
+                aria-pressed={isSongLiked}
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && toggleLike(currentTrack)}
               />
             </div>
           </div>
@@ -223,10 +241,12 @@ const RightSidebar = () => {
             </div>
           )}
           {parsedLyrics.length > 0 && (
-            <button 
+            <button
               className="rs-lyrics-toggle-btn"
               onClick={() => setShowFullLyrics(prev => !prev)}
               title={showFullLyrics ? "Switch to Karaoke Mode" : "Switch to Full Synced Sheet"}
+              aria-label={showFullLyrics ? 'Switch to Karaoke lyrics mode' : 'Switch to interactive full lyrics sheet'}
+              aria-pressed={showFullLyrics}
             >
               {showFullLyrics ? (
                 <><AlignCenter size={13} /> Karaoke Mode</>
@@ -238,7 +258,7 @@ const RightSidebar = () => {
         </div>
       </div>
 
-      <div className="rs-lyrics-section">
+      <div className="rs-lyrics-section" aria-live="polite" aria-label="Lyrics section">
         {lyricsLoading ? (
           <div className="rs-lyrics-loading">
             <Loader size={20} className="spin-animation" color="var(--accent-primary)" />

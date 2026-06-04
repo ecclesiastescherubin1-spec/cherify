@@ -22,18 +22,9 @@ const Welcome = () => {
     localStorage.setItem('hasSeenWelcome', 'true');
     
     let currentUser = user;
-    // If not logged in, try anonymous login
+    // Proceed as local guest
     if (!currentUser) {
-      try {
-        const result = await loginAnonymously();
-        currentUser = {
-          id: result.user.uid,
-          email: result.user.email || 'guest@cherify.com',
-          name: 'Guest User'
-        };
-      } catch (err) {
-        console.warn("Anonymous login failed, proceeding as guest", err);
-      }
+      console.log("Proceeding as local guest");
     }
 
     if (currentUser) {

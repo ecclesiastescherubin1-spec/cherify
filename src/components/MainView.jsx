@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useContext } from 'react';
-import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus, Check, Minus, Edit, Trash2, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, Play, Search, Loader, Heart, Plus, ListPlus, Check, Minus, Edit, Trash2, Info } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 import { searchMusic, fetchTopSongs, fetchFeaturedPlaylists, searchYouTube } from '../services/musicService';
 import AuthView from './AuthView';
@@ -17,9 +17,14 @@ const Card = ({ title, desc, img, isArtist, isLiked, onPlay, onLike, onAdd, isPl
         {isPlayingTrack ? <Loader size={24} className="spin-animation" color="black" /> : <Play size={24} fill="black" />}
       </button>
       {!isArtist && (
-        <button className="card-action-overlay add-btn" onClick={(e) => { e.stopPropagation(); onAdd(); }}>
-          <Plus size={18} />
-        </button>
+        <div className="card-actions-container">
+          <button className="card-action-btn" onClick={(e) => { e.stopPropagation(); onAdd(); }} title="Add to Playlist">
+            <Plus size={18} />
+          </button>
+          <button className="card-action-btn" onClick={(e) => { e.stopPropagation(); onQueue(); }} title="Add to Queue">
+            <ListPlus size={18} />
+          </button>
+        </div>
       )}
     </div>
     <div className="card-info-footer">
@@ -291,6 +296,7 @@ const MainView = () => {
                         }} 
                         onLike={() => toggleLike(item)} 
                         onAdd={() => handleAddToPlaylist(item)}
+                        onQueue={() => addToQueue(item)}
                         isPlayingTrack={currentTrack?.id === item.id}
                       />
                     ))}
@@ -315,6 +321,7 @@ const MainView = () => {
                       }} 
                       onLike={() => toggleArtistSelection(item)} 
                       onAdd={() => {}}
+                      onQueue={() => {}}
                       isPlayingTrack={false}
                     />
                   ))}
@@ -340,6 +347,7 @@ const MainView = () => {
                         }} 
                         onLike={() => toggleLike(item)} 
                         onAdd={() => handleAddToPlaylist(item)}
+                        onQueue={() => addToQueue(item)}
                         isPlayingTrack={currentTrack?.id === item.id}
                       />
                     ))}
@@ -611,6 +619,7 @@ const MainView = () => {
                 onPlay={() => handlePlay(track, topSongs)} 
                 onLike={() => toggleLike(track)} 
                 onAdd={() => handleAddToPlaylist(track)}
+                onQueue={() => addToQueue(track)}
                 isPlayingTrack={currentTrack?.id === track.id}
               />
             ))}
@@ -637,7 +646,9 @@ const MainView = () => {
                 title={playlist.name} 
                 desc={playlist.description} 
                 img={playlist.image} 
-                onPlay={() => {}} 
+                onPlay={() => setActiveView(`playlist-${playlist.id}`)} 
+                onAdd={() => {}}
+                onQueue={() => {}}
               />
             ))}
           </div>
@@ -737,10 +748,13 @@ const SongList = ({ songs, onPlay }) => {
               </td>
               <td style={{ padding: '12px 8px', textAlign: 'right' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
-                  <button className="list-add-btn" onClick={(e) => handleAdd(e, track)}>
+                  <button className="list-add-btn" onClick={(e) => handleAdd(e, track)} title="Add to Playlist">
                     <Plus size={18} />
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); toggleLike(track); }}>
+                  <button className="list-add-btn" onClick={(e) => { e.stopPropagation(); addToQueue(track); }} title="Add to Queue">
+                    <ListPlus size={18} />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); toggleLike(track); }} title="Like">
                     <Heart size={18} fill={likedSongs.some(s => s.id === track.id) ? 'var(--text-bright-accent)' : 'none'} color={likedSongs.some(s => s.id === track.id) ? 'var(--text-bright-accent)' : 'var(--text-subdued)'} />
                   </button>
                 </div>

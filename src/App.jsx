@@ -1,11 +1,18 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, lazy, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
-import MainView from './components/MainView';
 import PlaybackBar from './components/PlaybackBar';
 import MobileNav from './components/MobileNav';
-import RightSidebar from './components/RightSidebar';
 import { PlayerProvider, PlayerContext } from './context/PlayerContext';
-import Welcome from './components/Welcome';
+
+const MainView = lazy(() => import('./components/MainView'));
+const RightSidebar = lazy(() => import('./components/RightSidebar'));
+const Welcome = lazy(() => import('./components/Welcome'));
+
+const SuspenseFallback = () => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--text-subdued)' }}>
+    <div className="spin-animation" style={{ width: 28, height: 28, border: '3px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent-primary)', borderRadius: '50%' }} />
+  </div>
+);
 
 // Isolated YoutubePlayer component to prevent React Virtual DOM reconciliation issues
 const YoutubePlayer = () => {
@@ -145,15 +152,19 @@ const AppContent = () => {
     };
   }, [showWelcome]);
 
-  if (showWelcome) return <Welcome />;
+  if (showWelcome) return <Suspense fallback={<SuspenseFallback />}><Welcome /></Suspense>;
 
   const isYoutubePlaying = currentTrack?.type === 'youtube';
 
   return (
     <div className="app-container">
       <Sidebar />
-      <MainView />
-      <RightSidebar />
+      <Suspense fallback={<SuspenseFallback />}>
+        <MainView />
+      </Suspense>
+      <Suspense fallback={<SuspenseFallback />}>
+        <RightSidebar />
+      </Suspense>
       <MobileNav />
       <PlaybackBar />
       
@@ -244,6 +255,7 @@ const AppContent = () => {
                 { keys: ['ArrowUp', 'ArrowDown'], desc: 'Adjust Volume Up / Down 5%' },
                 { keys: ['M'], desc: 'Mute / Unmute Volume' },
                 { keys: ['P', 'N'], desc: 'Previous / Next Track' },
+                { keys: ['Ctrl+D'], desc: 'Toggle Dark / Light Theme' },
                 { keys: ['?'], desc: 'Toggle Shortcuts Help Modal' }
               ].map((s, idx) => (
                 <div 

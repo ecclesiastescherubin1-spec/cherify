@@ -185,12 +185,21 @@ export const PlayerProvider = ({ children }) => {
   // 2. Real-Time Firestore Listener for User Data
   useEffect(() => {
     if (!user || user.id === 'guest') {
-      if (!user) {
+      try {
+        const guestLikedStr = localStorage.getItem('guestLikedSongs');
+        const guestLiked = guestLikedStr ? JSON.parse(guestLikedStr) : [];
+        setLikedSongs(Array.isArray(guestLiked) ? guestLiked : []);
+
+        const guestArtistsStr = localStorage.getItem('guestArtists');
+        const guestArtists = guestArtistsStr ? JSON.parse(guestArtistsStr) : [];
+        setPreferredArtists(Array.isArray(guestArtists) ? guestArtists : []);
+      } catch (e) {
         setLikedSongs([]);
-        setUserPlaylists([]);
-        setUserAlbums([]);
-        setHistory([]);
+        setPreferredArtists([]);
       }
+      setUserPlaylists([]);
+      setUserAlbums([]);
+      setHistory([]);
       return;
     }
 
@@ -379,8 +388,9 @@ export const PlayerProvider = ({ children }) => {
       // Save to History in Firestore
       if (user) {
         const userDocRef = doc(db, 'users', user.id);
+        const sanitizedTrack = JSON.parse(JSON.stringify(track));
         updateDoc(userDocRef, {
-          history: arrayUnion(track)
+          history: arrayUnion(sanitizedTrack)
         });
       }
     } catch (err) { console.error("PlayTrack error:", err); }
@@ -480,12 +490,29 @@ export const PlayerProvider = ({ children }) => {
   };
 
   const toggleLike = async (track) => {
-    if (!user) return;
-    const userDocRef = doc(db, 'users', user.id);
-    const isLiked = likedSongs.some(s => s.id === track.id);
-    await updateDoc(userDocRef, {
-      likedSongs: isLiked ? arrayRemove(likedSongs.find(s => s.id === track.id)) : arrayUnion(track)
-    });
+    if (!track || !track.id) return;
+    const currentLiked = Array.isArray(likedSongs) ? likedSongs : [];
+    const isLiked = currentLiked.some(s => s.id === track.id);
+    if (!user) {
+      const updated = isLiked ? currentLiked.filter(s => s.id !== track.id) : [...currentLiked, track];
+      setLikedSongs(updated);
+      try {
+        localStorage.setItem('guestLikedSongs', JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save guestLikedSongs to localStorage:", e);
+      }
+      return;
+    }
+    try {
+      const userDocRef = doc(db, 'users', user.id);
+      // Sanitize track to remove any undefined properties which cause Firestore errors
+      const sanitizedTrack = JSON.parse(JSON.stringify(track));
+      await updateDoc(userDocRef, {
+        likedSongs: isLiked ? arrayRemove(currentLiked.find(s => s.id === track.id)) : arrayUnion(sanitizedTrack)
+      });
+    } catch (err) {
+      console.error("Error toggling like:", err);
+    }
   };
 
   const addToPlaylist = async (playlistId, track) => {
@@ -599,25 +626,38 @@ export const PlayerProvider = ({ children }) => {
   };
 
   const toggleArtistSelection = async (artist) => {
-    if (user) {
-      const userDocRef = doc(db, 'users', user.id);
-      const safeArtists = preferredArtists || [];
-      const exists = safeArtists.find(a => a.id === artist.id);
-      let updatedArtists;
-      if (exists) {
-        updatedArtists = safeArtists.filter(a => a.id !== artist.id);
-      } else {
-        updatedArtists = [...safeArtists, { id: artist.id, name: artist.name || artist.title || 'Unknown', img: artist.img || artist.coverUrl || '', type: 'artist' }];
+    if (!artist || !artist.id) return;
+    const safeArtists = Array.isArray(preferredArtists) ? preferredArtists : [];
+    const exists = safeArtists.find(a => a.id === artist.id);
+    let updatedArtists;
+    
+    if (exists) {
+      updatedArtists = safeArtists.filter(a => a.id !== artist.id);
+    } else {
+      updatedArtists = [...safeArtists, { id: artist.id, name: artist.name || artist.title || 'Unknown', img: artist.img || artist.coverUrl || '', type: 'artist' }];
+    }
+
+    // Optimistic UI update
+    setPreferredArtists(updatedArtists);
+
+    if (!user) {
+      try {
+        localStorage.setItem('guestArtists', JSON.stringify(updatedArtists));
+      } catch (e) {
+        console.error("Failed to save guestArtists to localStorage:", e);
       }
+      return;
+    }
+    
+    try {
+      const userDocRef = doc(db, 'users', user.id);
       await updateDoc(userDocRef, {
         preferredArtists: updatedArtists
       });
-    } else {
-      setSelectedArtists(prev => {
-        const safePrev = prev || [];
-        const exists = safePrev.find(a => a.id === artist.id);
-        return exists ? safePrev.filter(a => a.id !== artist.id) : [...safePrev, artist];
-      });
+    } catch (err) {
+      console.error("Error toggling artist:", err);
+      // Revert on failure
+      setPreferredArtists(safeArtists);
     }
   };
 

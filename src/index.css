@@ -1252,32 +1252,39 @@ ul {
   outline: none;
 }
 
-.card-action-overlay {
+.card-actions-container {
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 8px;
   opacity: 0;
   transform: translateY(10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 5;
 }
-.card:hover .card-action-overlay {
+.card:hover .card-actions-container {
   opacity: 1;
   transform: translateY(0);
 }
-.card-action-overlay:hover {
+.card-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.card-action-btn:hover {
   background: var(--accent-primary);
-  transform: scale(1.1) !important;
+  transform: scale(1.1);
+  border-color: transparent;
 }
 
 /* Artist Banner & Playlist Header Styles */
