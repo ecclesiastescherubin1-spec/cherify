@@ -5,7 +5,7 @@ import { searchMusic, fetchTopSongs, fetchFeaturedPlaylists, searchYouTube } fro
 import AuthView from './AuthView';
 import ProfileView from './ProfileView';
 
-const Card = ({ title, desc, img, isArtist, isLiked, onPlay, onLike, onAdd, isPlayingTrack, isAlbumMode }) => (
+const Card = ({ title, desc, img, isArtist, isLiked, onPlay, onLike, onAdd, onQueue, isPlayingTrack, isAlbumMode }) => (
   <div className={`card ${isPlayingTrack ? 'active-playing' : ''}`}>
     <div 
       className={`card-img-container ${isArtist ? 'artist' : ''}`} 
@@ -16,14 +16,18 @@ const Card = ({ title, desc, img, isArtist, isLiked, onPlay, onLike, onAdd, isPl
       <button className="play-btn">
         {isPlayingTrack ? <Loader size={24} className="spin-animation" color="black" /> : <Play size={24} fill="black" />}
       </button>
-      {!isArtist && (
+      {!isArtist && (onAdd || onQueue) && (
         <div className="card-actions-container">
-          <button className="card-action-btn" onClick={(e) => { e.stopPropagation(); onAdd(); }} title="Add to Playlist">
-            <Plus size={18} />
-          </button>
-          <button className="card-action-btn" onClick={(e) => { e.stopPropagation(); onQueue(); }} title="Add to Queue">
-            <ListPlus size={18} />
-          </button>
+          {onAdd && (
+            <button className="card-action-btn" onClick={(e) => { e.stopPropagation(); onAdd(); }} title="Add to Playlist">
+              <Plus size={18} />
+            </button>
+          )}
+          {onQueue && (
+            <button className="card-action-btn" onClick={(e) => { e.stopPropagation(); onQueue(); }} title="Add to Queue">
+              <ListPlus size={18} />
+            </button>
+          )}
         </div>
       )}
     </div>
