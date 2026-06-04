@@ -295,11 +295,11 @@ export const PlayerProvider = ({ children }) => {
 
   const removeFromQueue = (trackId) => {
     setQueue(prev => {
-      const idx = prev.findIndex(t => t.id === trackId);
+      const idx = prev.findIndex(t => String(t.id) === String(trackId));
       if (idx === -1) return prev;
       
       const track = prev[idx];
-      const newQueue = prev.filter(t => t.id !== trackId);
+      const newQueue = prev.filter(t => String(t.id) !== String(trackId));
       showToast(`Removed "${track.title}" from queue`, 'info');
       
       if (idx < currentIndex) {
@@ -331,7 +331,7 @@ export const PlayerProvider = ({ children }) => {
   const addToQueue = (track) => {
     if (!track) return;
     setQueue(prev => {
-      if (prev.some(t => t.id === track.id)) {
+      if (prev.some(t => String(t.id) === String(track.id))) {
         showToast(`"${track.title}" is already in the queue`, 'info');
         return prev;
       }
@@ -347,10 +347,10 @@ export const PlayerProvider = ({ children }) => {
     try {
       if (trackList) {
         setQueue(trackList);
-        const index = trackList.findIndex(t => t.id === track.id);
+        const index = trackList.findIndex(t => String(t.id) === String(track.id));
         setCurrentIndex(index !== -1 ? index : 0);
       } else {
-        const index = queue.findIndex(t => t.id === track.id);
+        const index = queue.findIndex(t => String(t.id) === String(track.id));
         if (index !== -1) {
           setCurrentIndex(index);
         } else {

@@ -521,7 +521,7 @@ const MainView = () => {
     if (activeView.startsWith('album-')) return <AlbumDetail id={activeView.split('-')[1]} />;
 
     if (activeView === 'queue') {
-      const activeIdx = queue.findIndex(t => t.id === currentTrack?.id);
+      const activeIdx = queue.findIndex(t => String(t.id) === String(currentTrack?.id));
       const nextUp = activeIdx !== -1 ? queue.slice(activeIdx + 1) : queue;
 
       return (
