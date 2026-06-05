@@ -2,12 +2,16 @@ import { useContext, useState } from 'react';
 import { Home, Search, Library, Plus, ArrowRight, List, Heart, Clock } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 const Sidebar = () => {
-  const { activeView, setActiveView, userPlaylists, createPlaylist, preferredArtists, likedSongs, userAlbums } = useContext(PlayerContext);
+  const { activeView, setActiveView, userPlaylists, createPlaylist, preferredArtists, likedSongs, userAlbums, showPrompt } = useContext(PlayerContext);
   const [libSearch, setLibSearch] = useState('');
 
   const handleCreatePlaylist = () => {
-    const name = prompt("Enter playlist name:", "My New Playlist");
-    if (name) createPlaylist(name);
+    showPrompt(
+      '🎵 New Playlist',
+      'My New Playlist',
+      'Enter playlist name...',
+      (name) => { if (name && name.trim()) createPlaylist(name.trim()); }
+    );
   };
 
   const filteredLibrary = [

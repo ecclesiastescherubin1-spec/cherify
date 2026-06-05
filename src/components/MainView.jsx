@@ -57,7 +57,7 @@ const BrowseCard = ({ title, color, img, onClick }) => (
 const MainView = () => {
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef(null);
-  const { playTrack, currentTrack, activeView, setActiveView, likedSongs, toggleLike, preferredArtists, history, userPlaylists, addToPlaylist, selectedArtists, toggleArtistSelection, userAlbums, toggleAlbumSelection, queue, removeFromQueue, clearQueue, addToQueue } = useContext(PlayerContext);
+  const { playTrack, currentTrack, activeView, setActiveView, likedSongs, toggleLike, preferredArtists, history, userPlaylists, addToPlaylist, selectedArtists, toggleArtistSelection, userAlbums, toggleAlbumSelection, queue, removeFromQueue, clearQueue, addToQueue, showSelectPlaylistModal, showToast } = useContext(PlayerContext);
   
   const [topSongs, setTopSongs] = useState([]);
   const [playlists, setPlaylists] = useState([]);
@@ -200,18 +200,14 @@ const MainView = () => {
 
   const handleAddToPlaylist = (track) => {
     if (userPlaylists.length === 0) {
-      alert("You don't have any playlists yet. Create one in the sidebar!");
+      showToast("Create a playlist in the sidebar first!", "info");
       return;
     }
-    const playlistNames = userPlaylists.map((p, i) => `${i + 1}. ${p.name}`).join('\n');
-    const choice = prompt(`Add "${track.title}" to which playlist?\n\n${playlistNames}\n\nEnter the number:`);
-    if (choice) {
-      const index = parseInt(choice) - 1;
-      if (userPlaylists[index]) {
-        addToPlaylist(userPlaylists[index].id, track);
-        alert(`Added to ${userPlaylists[index].name}!`);
-      }
-    }
+    showSelectPlaylistModal(track, (playlistId) => {
+      const playlist = userPlaylists.find(p => p.id === playlistId);
+      addToPlaylist(playlistId, track);
+      showToast(`Added to "${playlist?.name}"!`, 'success');
+    });
   };
 
   const categories = [
@@ -712,23 +708,20 @@ const UserActions = () => {
 };
 
 const SongList = ({ songs, onPlay }) => {
-  const { likedSongs, toggleLike, currentTrack, isPlaying, userPlaylists, addToPlaylist, addToQueue } = useContext(PlayerContext);
+  const { likedSongs, toggleLike, currentTrack, isPlaying, userPlaylists, addToPlaylist, addToQueue, showSelectPlaylistModal, showToast } = useContext(PlayerContext);
   const safeSongs = Array.isArray(songs) ? songs : [];
 
   const handleAdd = (e, track) => {
     e.stopPropagation();
     if (userPlaylists.length === 0) {
-      alert("You don't have any playlists yet. Create one in the sidebar!");
+      showToast("Create a playlist in the sidebar first!", "info");
       return;
     }
-    const playlistNames = userPlaylists.map((p, i) => `${i + 1}. ${p.name}`).join('\n');
-    const choice = prompt(`Add "${track.title}" to which playlist?\n\n${playlistNames}\n\nEnter the number:`);
-    if (choice) {
-      const index = parseInt(choice) - 1;
-      if (userPlaylists[index]) {
-        addToPlaylist(userPlaylists[index].id, track);
-      }
-    }
+    showSelectPlaylistModal(track, (playlistId) => {
+      const playlist = userPlaylists.find(p => p.id === playlistId);
+      addToPlaylist(playlistId, track);
+      showToast(`Added to "${playlist?.name}"!`, 'success');
+    });
   };
   if (safeSongs.length === 0) return <div className="empty-state">No songs found.</div>;
   return (
@@ -772,22 +765,28 @@ const SongList = ({ songs, onPlay }) => {
 };
 
 const PlaylistDetail = ({ id }) => {
-  const { userPlaylists, playTrack, deletePlaylist, renamePlaylist } = useContext(PlayerContext);
+  const { userPlaylists, playTrack, deletePlaylist, renamePlaylist, showPrompt, showConfirm } = useContext(PlayerContext);
   const playlist = (Array.isArray(userPlaylists) ? userPlaylists : []).find(p => p.id === id);
   
   if (!playlist) return <div className="empty-state">Playlist not found</div>;
 
   const handleRename = () => {
-    const newName = prompt("Rename playlist to:", playlist.name);
-    if (newName && newName.trim()) {
-      renamePlaylist(playlist.id, newName.trim());
-    }
+    showPrompt(
+      '✏️ Rename Playlist',
+      playlist.name,
+      'Enter new playlist name...',
+      (newName) => { if (newName && newName.trim()) renamePlaylist(playlist.id, newName.trim()); }
+    );
   };
 
   const handleDelete = () => {
-    if (confirm(`Are you sure you want to delete the playlist "${playlist.name}"?`)) {
-      deletePlaylist(playlist.id);
-    }
+    showConfirm(
+      '🗑️ Delete Playlist',
+      `Are you sure you want to delete "${playlist.name}"? This cannot be undone.`,
+      () => deletePlaylist(playlist.id),
+      'Delete',
+      'Cancel'
+    );
   };
 
   return (

@@ -4,7 +4,7 @@ import { MoreHorizontal, Maximize2, Share2, CheckCircle2, Loader, ListCollapse, 
 import Visualizer from './Visualizer';
 
 const RightSidebar = () => {
-  const { currentTrack, toggleFullscreen, likedSongs, toggleLike, progress, seek, formatTime } = useContext(PlayerContext);
+  const { currentTrack, toggleFullscreen, likedSongs, toggleLike, progress, seek, formatTime, showToast } = useContext(PlayerContext);
   const [lyrics, setLyrics] = useState('');
   const [syncedLyrics, setSyncedLyrics] = useState('');
   const [lyricsLoading, setLyricsLoading] = useState(false);
@@ -31,7 +31,7 @@ const RightSidebar = () => {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Download failed:", err);
-      alert("Failed to download song stream.");
+      showToast("Failed to download song stream.", "error");
     }
     setIsDownloading(false);
   };
@@ -145,7 +145,7 @@ const RightSidebar = () => {
       shareUrl = `${window.location.origin}/?track=${currentTrack.id}`;
     }
     navigator.clipboard.writeText(shareUrl);
-    alert("Redirectable share link copied to clipboard!");
+    showToast("Share link copied to clipboard! 🔗", "success");
   };
 
   const handleMore = () => {

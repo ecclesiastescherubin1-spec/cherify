@@ -49,9 +49,53 @@ export const PlayerProvider = ({ children }) => {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [preMuteVolume, setPreMuteVolume] = useState(1);
   const [toast, setToast] = useState(null);
+  const [modalConfig, setModalConfig] = useState(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
+  };
+
+  const showPrompt = (title, defaultValue, placeholder, onConfirm) => {
+    setModalConfig({
+      type: 'prompt',
+      title,
+      defaultValue,
+      placeholder,
+      onConfirm: (val) => {
+        onConfirm(val);
+        setModalConfig(null);
+      },
+      onCancel: () => setModalConfig(null)
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm, confirmText = 'Confirm', cancelText = 'Cancel') => {
+    setModalConfig({
+      type: 'confirm',
+      title,
+      message,
+      confirmText,
+      cancelText,
+      onConfirm: () => {
+        onConfirm();
+        setModalConfig(null);
+      },
+      onCancel: () => setModalConfig(null)
+    });
+  };
+
+  const showSelectPlaylistModal = (track, onConfirm) => {
+    setModalConfig({
+      type: 'selectPlaylist',
+      title: 'Add to Playlist',
+      message: `Select a playlist to add "${track.title}"`,
+      options: userPlaylists,
+      onConfirm: (playlistId) => {
+        onConfirm(playlistId);
+        setModalConfig(null);
+      },
+      onCancel: () => setModalConfig(null)
+    });
   };
 
   useEffect(() => {
@@ -637,8 +681,8 @@ export const PlayerProvider = ({ children }) => {
   
   const resetPassword = (email) => {
     sendPasswordResetEmail(auth, email)
-      .then(() => alert("Password reset link sent to your email!"))
-      .catch(err => alert(err.message));
+      .then(() => showToast("Password reset link sent to your email!", "success"))
+      .catch(err => showToast(err.message, "error"));
   };
 
   const updateUserProfile = async (updates) => {
@@ -828,7 +872,12 @@ export const PlayerProvider = ({ children }) => {
       showShortcutsModal, setShowShortcutsModal,
       toggleMute,
       toast,
-      showToast
+      showToast,
+      modalConfig,
+      setModalConfig,
+      showPrompt,
+      showConfirm,
+      showSelectPlaylistModal
     }}>
       {children}
     </PlayerContext.Provider>

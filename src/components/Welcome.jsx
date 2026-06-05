@@ -3,7 +3,7 @@ import { PlayerContext } from '../context/PlayerContext';
 import { Music, Mail, Lock, User, ArrowRight, Check, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 const Welcome = () => {
-  const { setShowWelcome, setPreferredArtists, preferredArtists, login, register, updateUserProfile, user, loginAnonymously, resetPassword } = useContext(PlayerContext);
+  const { setShowWelcome, setPreferredArtists, preferredArtists, login, register, updateUserProfile, user, loginAnonymously, resetPassword, showToast } = useContext(PlayerContext);
   const [stage, setStage] = useState('intro'); // 'intro', 'auth', 'artists', 'forgot', 'reset-success', 'otp', 'new-password'
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -82,7 +82,7 @@ const Welcome = () => {
         // If no API key is set, the function returns a mock OTP for testing
         if (data.mock) {
           console.log("MOCK OTP (Set RESEND_API_KEY for real email):", data.mock);
-          alert(`DEMO MODE: OTP sent to ${email}. Check console for code or use: ${data.mock}`);
+          showToast(`Demo Mode: OTP sent — code is ${data.mock}`, "info");
         }
         setStage('otp');
       } else {
@@ -132,7 +132,7 @@ const Welcome = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        alert("Password updated successfully! You can now sign in.");
+        showToast("Password updated successfully! You can now sign in.", "success");
         setStage('auth');
         setIsLogin(true);
       } else {

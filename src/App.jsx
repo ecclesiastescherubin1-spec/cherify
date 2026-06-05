@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, lazy, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 import PlaybackBar from './components/PlaybackBar';
 import MobileNav from './components/MobileNav';
+import CustomModal from './components/CustomModal';
 import { PlayerProvider, PlayerContext } from './context/PlayerContext';
 
 const MainView = lazy(() => import('./components/MainView'));
@@ -305,6 +306,7 @@ const AppContent = () => {
           <span>{toast.message}</span>
         </div>
       )}
+      <CustomModal />
     </div>
   );
 };
