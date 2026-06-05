@@ -199,14 +199,10 @@ const MainView = () => {
   };
 
   const handleAddToPlaylist = (track) => {
-    if (userPlaylists.length === 0) {
-      showToast("Create a playlist in the sidebar first!", "info");
-      return;
-    }
     showSelectPlaylistModal(track, (playlistId) => {
       const playlist = userPlaylists.find(p => p.id === playlistId);
       addToPlaylist(playlistId, track);
-      showToast(`Added to "${playlist?.name}"!`, 'success');
+      showToast(`Added to "${playlist?.name}"! ✨`, 'success');
     });
   };
 
@@ -713,14 +709,10 @@ const SongList = ({ songs, onPlay }) => {
 
   const handleAdd = (e, track) => {
     e.stopPropagation();
-    if (userPlaylists.length === 0) {
-      showToast("Create a playlist in the sidebar first!", "info");
-      return;
-    }
     showSelectPlaylistModal(track, (playlistId) => {
       const playlist = userPlaylists.find(p => p.id === playlistId);
       addToPlaylist(playlistId, track);
-      showToast(`Added to "${playlist?.name}"!`, 'success');
+      showToast(`Added to "${playlist?.name}"! ✨`, 'success');
     });
   };
   if (safeSongs.length === 0) return <div className="empty-state">No songs found.</div>;
