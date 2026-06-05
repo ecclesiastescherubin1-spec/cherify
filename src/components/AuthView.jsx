@@ -44,6 +44,12 @@ const AuthView = () => {
               We've sent a secure reset link to <strong>{email}</strong>.<br/>
               Follow the link to verify your identity and set a new password.
             </p>
+            <div className="auth-hint-v2" style={{ border: '1px dashed rgba(249, 115, 22, 0.3)', background: 'rgba(249, 115, 22, 0.05)', color: 'rgba(255, 255, 255, 0.75)', padding: '18px', borderRadius: '20px', marginBottom: '24px', textAlign: 'left' }}>
+              <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
+                <strong style={{ color: '#f97316', display: 'block', marginBottom: '4px', fontSize: '14px' }}>⚠️ Can't find the email?</strong>
+                Check your <strong>Spam/Junk folder</strong>. If it’s there, open the email and click <strong>"Report as not spam"</strong> to ensure all future emails deliver straight to your Inbox.
+              </p>
+            </div>
             <div className="auth-hint-v2">
               <p>The new password will be automatically updated in Firebase for future access.</p>
             </div>
