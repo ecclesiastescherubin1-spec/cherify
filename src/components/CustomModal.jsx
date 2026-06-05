@@ -3,8 +3,8 @@ import { X, Music } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 
 const CustomModal = () => {
-  // Read userPlaylists LIVE from context — never stale
-  const { modalConfig, userPlaylists } = useContext(PlayerContext);
+  // Read userPlaylists and user LIVE from context — never stale
+  const { modalConfig, userPlaylists, user, setActiveView } = useContext(PlayerContext);
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef(null);
 
@@ -116,14 +116,41 @@ const CustomModal = () => {
                 ))
               ) : (
                 <div style={{
-                  color: 'var(--text-subdued)', padding: '28px 0',
-                  fontSize: '14px', textAlign: 'center', lineHeight: '1.6'
+                  color: 'var(--text-subdued)', padding: '28px 16px',
+                  fontSize: '14px', textAlign: 'center', lineHeight: '1.8'
                 }}>
-                  <Music size={32} style={{ opacity: 0.3, display: 'block', margin: '0 auto 10px' }} />
-                  No playlists yet.<br />
-                  <span style={{ fontSize: '12px', opacity: 0.7 }}>
-                    Click the <strong>+</strong> in Your Library to create one.
-                  </span>
+                  <Music size={36} style={{ opacity: 0.25, display: 'block', margin: '0 auto 12px' }} />
+                  {!user || user.isAnonymous ? (
+                    <>
+                      <strong style={{ color: 'white', fontSize: '15px', display: 'block', marginBottom: '6px' }}>
+                        Sign in to use Playlists
+                      </strong>
+                      <span style={{ fontSize: '12px', opacity: 0.65 }}>
+                        Create an account to save songs and build your library.
+                      </span>
+                      <button
+                        onClick={() => { modalConfig.onCancel(); setActiveView('auth'); }}
+                        style={{
+                          marginTop: '18px', display: 'block', width: '100%',
+                          padding: '11px', borderRadius: '24px',
+                          background: 'var(--accent-primary)', border: 'none',
+                          color: 'white', fontWeight: '700', fontSize: '14px',
+                          cursor: 'pointer', boxShadow: '0 4px 15px var(--accent-glow)'
+                        }}
+                      >
+                        Sign In / Create Account
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <strong style={{ color: 'white', fontSize: '15px', display: 'block', marginBottom: '6px' }}>
+                        No playlists yet
+                      </strong>
+                      <span style={{ fontSize: '12px', opacity: 0.65 }}>
+                        Click the <strong style={{ color: 'var(--accent-primary)' }}>+</strong> in Your Library to create your first playlist.
+                      </span>
+                    </>
+                  )}
                 </div>
               )}
             </div>
