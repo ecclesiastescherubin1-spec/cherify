@@ -2,10 +2,21 @@ import { useContext, useState } from 'react';
 import { Home, Search, Library, Plus, ArrowRight, List, Heart, Clock } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 const Sidebar = () => {
-  const { activeView, setActiveView, userPlaylists, createPlaylist, preferredArtists, likedSongs, userAlbums, showPrompt } = useContext(PlayerContext);
+  const { user, activeView, setActiveView, userPlaylists, createPlaylist, preferredArtists, likedSongs, userAlbums, showPrompt, showConfirm } = useContext(PlayerContext);
   const [libSearch, setLibSearch] = useState('');
 
   const handleCreatePlaylist = () => {
+    if (!user || user.isAnonymous) {
+      showConfirm(
+        '🔒 Login Required',
+        'Only signed-in users can create and manage playlists. Please log in or sign up to start building your library.',
+        () => setActiveView('auth'),
+        'Sign In',
+        'Cancel'
+      );
+      return;
+    }
+
     showPrompt(
       '🎵 New Playlist',
       'My New Playlist',
