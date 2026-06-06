@@ -72,77 +72,22 @@ const Welcome = () => {
     setIsLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/send-otp', {
-        method: 'POST',
-        body: JSON.stringify({ email, action: 'send' }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const data = await response.json();
-      if (response.ok) {
-        // If no API key is set, the function returns a mock OTP for testing
-        if (data.mock) {
-          console.log("MOCK OTP (Set RESEND_API_KEY for real email):", data.mock);
-          showToast(`Demo Mode: OTP sent — code is ${data.mock}`, "info");
-        }
-        setStage('otp');
-      } else {
-        throw new Error(data.error || "Failed to send OTP");
-      }
+      // Use Firebase's native password reset email — the OTP approach
+      // cannot actually update Firebase passwords without Admin SDK.
+      // Firebase's sendPasswordResetEmail is the correct, reliable approach.
+      await resetPassword(email);
+      setStage('reset-success');
     } catch (err) {
-      setError(err.message);
+      // Show a friendly error message
+      if (err.code === 'auth/user-not-found' || err.message?.includes('user-not-found')) {
+        setError('No account found with this email address.');
+      } else {
+        setError(err.message || 'Failed to send reset email. Please try again.');
+      }
     }
     setIsLoading(false);
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    const enteredOtp = otp.join('');
-    try {
-      const response = await fetch('/api/send-otp', {
-        method: 'POST',
-        body: JSON.stringify({ email, action: 'verify', enteredOtp }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setStage('new-password');
-      } else {
-        throw new Error(data.error || "Invalid OTP");
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-    setIsLoading(false);
-  };
-
-  const handleUpdatePassword = async (e) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/send-otp', {
-        method: 'POST',
-        body: JSON.stringify({ email, action: 'reset', newPassword }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const data = await response.json();
-      if (response.ok) {
-        showToast("Password updated successfully! You can now sign in.", "success");
-        setStage('auth');
-        setIsLogin(true);
-      } else {
-        throw new Error(data.error || "Failed to update password");
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-    setIsLoading(false);
-  };
 
   const handleOtpChange = (index, value) => {
     if (isNaN(value)) return;
@@ -250,75 +195,30 @@ const Welcome = () => {
           </div>
         )}
 
-        {stage === 'otp' && (
-          <div className="auth-card-perfect text-center">
-            <button className="back-btn-simple" onClick={() => setStage('forgot')}>
-              <ArrowLeft size={20} />
-            </button>
-            <div className="auth-card-header">
-              <h2>Verify OTP</h2>
-              <p>Enter the 6-digit code sent to <strong>{email}</strong></p>
+
+        {stage === 'reset-success' && (
+          <div className="auth-card-perfect" style={{ textAlign: 'center' }}>
+            <div style={{ width: '72px', height: '72px', background: 'rgba(16,185,129,0.12)', border: '2px solid rgba(16,185,129,0.25)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+              <ShieldCheck size={36} color="#10b981" />
             </div>
-            <form onSubmit={handleVerifyOtp} className="auth-form-perfect">
-              <div className="otp-container">
-                {otp.map((digit, i) => (
-                  <input
-                    key={i}
-                    id={`otp-${i}`}
-                    type="text"
-                    maxLength="1"
-                    value={digit}
-                    onChange={(e) => handleOtpChange(i, e.target.value)}
-                    className="otp-input"
-                    autoFocus={i === 0}
-                  />
-                ))}
-              </div>
-              <button type="submit" className="btn-main full-width" disabled={isLoading}>
-                {isLoading ? 'Verifying...' : 'Verify Code'} <ShieldCheck size={20} />
-              </button>
-            </form>
-            <button className="resend-link" onClick={handleResetPassword} style={{ marginTop: '20px' }}>
-              Didn't get the code? Resend
+            <div className="auth-card-header" style={{ marginBottom: '0' }}>
+              <h2>Check Your Email</h2>
+              <p>We've sent a password reset link to <strong style={{ color: 'white' }}>{email}</strong>. Click the link in that email to set your new password.</p>
+            </div>
+            <div style={{ background: 'rgba(249,115,22,0.08)', border: '1px dashed rgba(249,115,22,0.3)', borderRadius: '16px', padding: '16px', margin: '24px 0', textAlign: 'left' }}>
+              <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6' }}>
+                <strong style={{ color: '#f97316', display: 'block', marginBottom: '4px' }}>⚠️ Can't find the email?</strong>
+                Check your <strong>Spam / Junk folder</strong>. If it's there, open it and click <strong>"Report as not spam"</strong> to ensure future emails go to your inbox.
+              </p>
+            </div>
+            <button className="btn-main full-width" onClick={() => { setStage('auth'); setIsLogin(true); setError(''); }}>
+              Back to Sign In
             </button>
-            {error && <div className="auth-error-simple">{error}</div>}
           </div>
         )}
 
-        {stage === 'new-password' && (
-          <div className="auth-card-perfect">
-            <div className="auth-card-header">
-              <h2>Set New Password</h2>
-              <p>Your identity is verified. Please provide a new password.</p>
-            </div>
-            <form onSubmit={handleUpdatePassword} className="auth-form-perfect">
-              <div className="input-field-perfect">
-                <Lock size={20} />
-                <input 
-                  type="password" 
-                  placeholder="New Password" 
-                  value={newPassword} 
-                  onChange={(e) => setNewPassword(e.target.value)} 
-                  required 
-                />
-              </div>
-              <div className="input-field-perfect">
-                <Lock size={20} />
-                <input 
-                  type="password" 
-                  placeholder="Confirm New Password" 
-                  value={confirmPassword} 
-                  onChange={(e) => setConfirmPassword(e.target.value)} 
-                  required 
-                />
-              </div>
-              <button type="submit" className="btn-main full-width" disabled={isLoading}>
-                {isLoading ? 'Updating...' : 'Reset Password'} <ShieldCheck size={20} />
-              </button>
-            </form>
-            {error && <div className="auth-error-simple">{error}</div>}
-          </div>
-        )}
+
+
 
 
 
