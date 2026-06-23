@@ -689,7 +689,7 @@ export const PlayerProvider = ({ children }) => {
     if (!user) return;
     try {
       const userDocRef = doc(db, 'users', user.id);
-      await updateDoc(userDocRef, updates);
+      await setDoc(userDocRef, updates, { merge: true });
       showToast("Profile updated successfully", "success");
     } catch (err) {
       console.error("Error updating profile:", err);
@@ -697,6 +697,7 @@ export const PlayerProvider = ({ children }) => {
       throw err;
     }
   };
+
 
 
   const toggleArtistSelection = async (artist) => {
