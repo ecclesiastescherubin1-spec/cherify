@@ -687,10 +687,17 @@ export const PlayerProvider = ({ children }) => {
 
   const updateUserProfile = async (updates) => {
     if (!user) return;
-    const userDocRef = doc(db, 'users', user.id);
-    await updateDoc(userDocRef, updates);
-    // UI will update automatically via the onSnapshot listener
+    try {
+      const userDocRef = doc(db, 'users', user.id);
+      await updateDoc(userDocRef, updates);
+      showToast("Profile updated successfully", "success");
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      showToast("Failed to update profile: " + err.message, "error");
+      throw err;
+    }
   };
+
 
   const toggleArtistSelection = async (artist) => {
     if (!artist || !artist.id) return;

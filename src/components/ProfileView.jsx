@@ -6,6 +6,7 @@ const ProfileView = () => {
   const { user, updateUserProfile, logout, setActiveView } = useContext(PlayerContext);
   const [name, setName] = useState(user?.name || '');
   const [img, setImg] = useState(user?.profileImg || '');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -19,16 +20,53 @@ const ProfileView = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImg(reader.result);
+        const tempImg = new Image();
+        tempImg.onload = () => {
+          const canvas = document.createElement('canvas');
+          const max_size = 400; // max size in pixels
+          let width = tempImg.width;
+          let height = tempImg.height;
+          
+          if (width > height) {
+            if (width > max_size) {
+              height *= max_size / width;
+              width = max_size;
+            }
+          } else {
+            if (height > max_size) {
+              width *= max_size / height;
+              height = max_size;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(tempImg, 0, 0, width, height);
+          
+          // Export as JPEG at 0.7 quality to keep size tiny (10-30KB)
+          const compressed = canvas.toDataURL('image/jpeg', 0.7);
+          setImg(compressed);
+        };
+        tempImg.src = reader.result;
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleSave = async () => {
-    await updateUserProfile({ name, profileImg: img });
-    setActiveView('home');
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await updateUserProfile({ name, profileImg: img });
+      setActiveView('home');
+    } catch (err) {
+      console.error("Save failed:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
+
 
   return (
     <div className="profile-container">
@@ -59,8 +97,8 @@ const ProfileView = () => {
           )}
 
           <div className="profile-actions">
-            <button className="btn-save" onClick={handleSave}>
-              <Save size={20} /> Save Changes
+            <button className="btn-save" onClick={handleSave} disabled={isSaving} style={{ opacity: isSaving ? 0.7 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}>
+              <Save size={20} /> {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
             <button className="btn-logout" onClick={() => { logout(); setActiveView('home'); }}>
               <LogOut size={20} /> Sign Out
